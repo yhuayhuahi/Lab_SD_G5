@@ -10,14 +10,14 @@ Laboratorio: Sistemas Distribuidos - C | Grupo 05
 - Huayhua Hillpa, Yourdyy Yossimar
 - Meza Vizcarra, Cielo Cristal
 
-> [!note] Distribución de Carpetas
-> /
-> |--LAB01/
-> |    |---Resueltos/
-> |    |      |-Caso01/
-> |    |      |-...
-> |    |---Propuestos/
-> |           |-Caso01/
-> |           |-...
-> |
-> |--LAB02/ ...
+### Distribución de Carpetas
+/
+|--LAB01/
+|    |---Resueltos/
+|    |      |-Caso01/
+|    |      |-...
+|    |---Propuestos/
+|           |-Caso01/
+|           |-...
+|
+|--LAB02/ ...
