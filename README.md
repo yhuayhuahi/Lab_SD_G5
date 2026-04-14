@@ -11,13 +11,5 @@ Laboratorio: Sistemas Distribuidos - C | Grupo 05
 - Meza Vizcarra, Cielo Cristal
 
 ### Distribución de Carpetas
-/
-|--LAB01/
-|    |---Resueltos/
-|    |      |-Caso01/
-|    |      |-...
-|    |---Propuestos/
-|           |-Caso01/
-|           |-...
-|
-|--LAB02/ ...
+[Estructura de carpetas](estructura.png)
+
