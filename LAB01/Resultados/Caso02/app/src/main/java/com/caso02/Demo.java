@@ -1,3 +1,5 @@
+package com.caso02;
+
 public class Demo {
     public static void main(String[] args) {
         CubbyHole cub = new CubbyHole();

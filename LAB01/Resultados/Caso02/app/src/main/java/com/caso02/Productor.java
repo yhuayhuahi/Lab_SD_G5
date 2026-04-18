@@ -1,3 +1,5 @@
+package com.caso02;
+
 public class Productor extends Thread {
     private CubbyHole cubbyhole;
     private int numero;
