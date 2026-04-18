@@ -8,10 +8,14 @@ public class Consumidor extends Thread {
     }
 
     public void run() {
-        int value = 0;
-        for (int i = 0; i < 10; i++) {
-            value = cubbyhole.get();
-            System.out.println("Consumidor #" + this.numero + " obtiene:" + value);
-        }
+    int value = 0;
+    for (int i = 0; i < 50; i++) {
+        value = cubbyhole.get();
+        System.out.println("Consumidor #" + this.numero + " obtiene:" + value);
+
+        try {
+            sleep(200); //lento
+        } catch (InterruptedException e) {}
     }
+}
 }
