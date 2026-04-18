@@ -10,7 +10,7 @@ public class CubbyHole {
             } catch (InterruptedException e) { }
         }
         available = false;
-        notifyAll();
+        notify();
         return contents;
     }
 
@@ -22,6 +22,6 @@ public class CubbyHole {
         }
         contents = value;
         available = true;
-        notifyAll();
+        notify();
     }
 }
