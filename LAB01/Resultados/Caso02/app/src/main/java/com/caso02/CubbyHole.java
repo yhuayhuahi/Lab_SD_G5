@@ -1,3 +1,4 @@
+package com.caso02;
 public class CubbyHole {
     private int contents;
     private boolean available = false;
