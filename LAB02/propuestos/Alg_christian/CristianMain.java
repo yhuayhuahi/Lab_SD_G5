@@ -63,7 +63,7 @@ public class CristianMain {
 
             System.out.println("Cliente " + client.getId() +
                 " ajustó " + String.format("%.5f", delta) +
-                " s → Nuevo: " + String.format("%.5f", client.getLocalTime()) + " s");
+                " s --> Nuevo: " + String.format("%.5f", client.getLocalTime()) + " s");
         }
 
         System.out.println("\nTiempos finales:");
