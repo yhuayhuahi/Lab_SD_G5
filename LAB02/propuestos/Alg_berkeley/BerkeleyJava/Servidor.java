@@ -1,6 +1,6 @@
 import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.*;
+import java.util.concurrent.*; // clases para manejo de hilos y tareas concurrentes
 
 public class Servidor {
     private List<Cliente> clientes;
@@ -16,7 +16,7 @@ public void sincronizar() {
 
     System.out.println("\n[MASTER] Enviando ping a clientes...");
 
-    ExecutorService pool = Executors.newFixedThreadPool(4); // pool de hilos para manejar clientes concurrentemente, crea 4 hilos para 4 clientes
+    ExecutorService pool = Executors.newFixedThreadPool(4); // pool de hilos para manejar clientes concurrentemente
 
     List<Future<Double>> resultados = new ArrayList<>();
 
