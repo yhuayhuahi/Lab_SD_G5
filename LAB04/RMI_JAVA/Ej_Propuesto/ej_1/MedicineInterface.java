@@ -1,5 +1,3 @@
-package Medicinas;
-
 // Ya no forma parte del diseño activo.
 
 //  Antes, Medicine extendía Remote y cada medicina se trataba

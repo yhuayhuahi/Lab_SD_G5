@@ -1,4 +1,3 @@
-package Medicinas;
 
 /**
  * Excepción base para errores de stock (stock agotado o insuficiente).
