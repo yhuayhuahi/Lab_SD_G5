@@ -1,4 +1,4 @@
-package Medicinas;
+
 
 // Ya no forma parte del diseño activo.
 

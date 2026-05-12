@@ -20,7 +20,7 @@ public class CalculatorImpl extends UnicastRemoteObject implements Calculator {
         return a * b;
     }
 
-    public int div(int a, int b) throws RemoteException {
+    public int div(int a, int b) throws RemoteException { // lanza ArithmeticException si b es 0, que el cliente debe manejar
         return a / b;
     }
 }
