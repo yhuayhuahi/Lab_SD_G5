@@ -21,7 +21,7 @@ public class ClienteSide {
             System.out.println("║     Bienvenido a PharmaciaRMI    ║");
             System.out.println("╚══════════════════════════════════╝\n");
 
-            boolean running = true;
+            boolean running = true; // mientras corra el programa, muestra el menú
 
             // Menú principal
             while (running) {

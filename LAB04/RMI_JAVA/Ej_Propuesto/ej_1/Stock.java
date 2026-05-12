@@ -8,17 +8,16 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 // Inventario de la farmacia. Único objeto remoto del sistema.
-
 public class Stock extends UnicastRemoteObject implements StockInterface {
 
-    private static final long serialVersionUID = 1L;
-    private static final Logger logger = Logger.getLogger(Stock.class.getName());
+    private static final long serialVersionUID = 1L; 
+    private static final Logger logger = Logger.getLogger(Stock.class.getName()); 
 
-    // la clave es un nombre en minúsculas para búsqueda uniforme //
+    // la clave es un nombre en minúsculas para búsqueda uniforme 
     private final Map<String, Medicine> medicines = new HashMap<>();
 
-    public Stock() throws RemoteException {
-        super();
+    public Stock() throws RemoteException { 
+        super(); // exporta el objeto remoto
     }
 
     // ── StockInterface ────────────────────────────────────────────────────────
@@ -52,7 +51,7 @@ public class Stock extends UnicastRemoteObject implements StockInterface {
             throw new StockException.InvalidAmountException(
                 "La cantidad debe ser mayor a cero. Recibido: " + amount);
         }
-        Medicine med = medicines.get(name.trim().toLowerCase());
+        Medicine med = medicines.get(name.trim().toLowerCase()); 
         if (med == null) {
             throw new StockException.MedicineNotFoundException(name.trim());
         }
@@ -60,16 +59,16 @@ public class Stock extends UnicastRemoteObject implements StockInterface {
         med.decreaseStock(amount);
 
         Medicine.Purchase purchase = new Medicine.Purchase(
-            med.getName(), med.getUnitPrice(), amount, med.getStock()
+            med.getName(), med.getUnitPrice(), amount, med.getStock() 
         );
         logger.info(String.format("Compra: %d x %s | Total: S/ %.2f",
-            amount, med.getName(), purchase.getTotalPrice()));
+            amount, med.getName(), purchase.getTotalPrice())); 
         return purchase;
     }
 
     @Override
     public synchronized List<Medicine> getStockProducts() throws RemoteException {
-        List<Medicine> snapshot = new ArrayList<>();
+        List<Medicine> snapshot = new ArrayList<>(); // copia para no exponer la colección del servidor
         for (Medicine m : medicines.values()) {
             try {
                 snapshot.add(new Medicine(m.getName(), m.getUnitPrice(), m.getStock()));
