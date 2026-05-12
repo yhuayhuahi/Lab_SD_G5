@@ -1,4 +1,4 @@
-package Medicinas;
+
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -13,11 +13,7 @@ public class Medicine implements Serializable {
     private final float  unitPrice;
     private int          stock;
 
-    /**
-     * @param name      nombre de la medicina (no nulo, no vacío)
-     * @param unitPrice precio por unidad (>= 0)
-     * @param stock     cantidad disponible (>= 0)
-     */
+
     public Medicine(String name, float unitPrice, int stock)
             throws StockException.InvalidAmountException {
         if (name == null || name.trim().isEmpty()) {
@@ -42,7 +38,6 @@ public class Medicine implements Serializable {
     public float  getUnitPrice() { return unitPrice; }
     public int    getStock()     { return stock;     }
 
-    // ── Lógica de dominio ─────────────────────────────────────────────────────
 
     public void decreaseStock(int amount)
             throws StockException, StockException.InvalidAmountException {

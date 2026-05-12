@@ -1,20 +1,5 @@
-package Medicinas;
+//Centraliza todas las excepciones
 
-/**
- * Excepción base para errores de stock (stock agotado o insuficiente).
- *
- * MEJORA: este archivo centraliza todas las excepciones de negocio
- * del sistema como clases internas estáticas, reemplazando el uso
- * de "throws Exception" genérico en toda la aplicación.
- *
- * Jerarquía:
- *
- *   Exception
- *   └── StockException                  (stock agotado / insuficiente)
- *   └── StockException.MedicineNotFoundException  (medicina no encontrada)
- *   └── StockException.InvalidAmountException     (cantidad o precio inválido)
- *   └── StockException.DuplicateMedicineException (medicina ya existe)
- */
 public class StockException extends Exception {
 
     private static final long serialVersionUID = 1L;
@@ -66,11 +51,7 @@ public class StockException extends Exception {
         }
     }
 
-    // ── DuplicateMedicineException ────────────────────────────────────────────
 
-    /**
-     * Lanzada al intentar agregar una medicina con un nombre ya registrado.
-     */
     public static class DuplicateMedicineException extends Exception {
 
         private static final long serialVersionUID = 1L;

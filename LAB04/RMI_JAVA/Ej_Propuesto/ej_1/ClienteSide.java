@@ -1,4 +1,3 @@
-package Medicinas;
 
 import java.rmi.Naming;
 import java.util.InputMismatchException;
@@ -34,18 +33,23 @@ public class ClienteSide {
                 switch (selection) {
 
                     // Lista todas las medicinas disponibles
-                    case 1 -> listarProductos(pharm);
+                    case 1:
+                        listarProductos(pharm);
+                        break;
 
                     // Realiza una compra
-                    case 2 -> comprarProducto(pharm, sc);
+                    case 2:
+                        comprarProducto(pharm, sc);
+                        break;
 
                     // Finaliza el programa
-                    case 3 -> {
+                    case 3:
                         System.out.println("Hasta luego.");
                         running = false;
-                    }
+                        break;
 
-                    default -> System.out.println("[!] Opción inválida. Elija 1, 2 o 3.\n");
+                    default:
+                        System.out.println("[!] Opción inválida. Elija 1, 2 o 3.\n");
                 }
             }
 
