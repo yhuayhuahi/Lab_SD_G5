@@ -15,11 +15,11 @@ public class CurrencyConverterImpl extends UnicastRemoteObject implements Curren
 
     @Override
     public double convertirADolares(double monto) throws RemoteException {
-        return monto * TASA_DOLAR;
+        return Math.round(monto * TASA_DOLAR * 100.0) / 100.0; 
     }
 
     @Override
     public double convertirAEuros(double monto) throws RemoteException {
-        return monto * TASA_EURO;
+        return Math.round(monto * TASA_EURO * 100.0) / 100.0;
     }
 }
