@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package org.example;
+
+option java_package = "org.example";
+option java_outer_classname = "CalculatorProto";
+
+service CalculatorService {
+    rpc Add (OperationRequest) returns (OperationResponse);
+    rpc Sub (OperationRequest) returns (OperationResponse);
+    rpc Mul (OperationRequest) returns (OperationResponse);
+    rpc Div (OperationRequest) returns (OperationResponse);
+}
+
+message OperationRequest {
+    double num1 = 1;
+    double num2 = 2;
+}
+
+message OperationResponse {
+    double result = 1;
+}
