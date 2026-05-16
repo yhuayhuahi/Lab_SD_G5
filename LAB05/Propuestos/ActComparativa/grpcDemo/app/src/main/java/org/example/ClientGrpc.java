@@ -8,6 +8,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
 public class ClientGrpc {
+  private static final long MB = 1024L * 1024L;
   private final ManagedChannel channel;
   private final CalculatorServiceGrpc.CalculatorServiceBlockingStub blockingStub;
 
@@ -57,13 +58,23 @@ public class ClientGrpc {
     System.out.println("Resultado de la division: " + num1 + " / " + num2 + " = " + response.getResult() + "\n");
   }
 
+  private static long usedMemoryBytes() {
+    Runtime runtime = Runtime.getRuntime();
+    return runtime.totalMemory() - runtime.freeMemory();
+  }
+
+  private static String formatMb(long bytes) {
+    return String.format("%.2f MB", bytes / (double) MB);
+  }
+
   public static void main(String[] args) throws Exception {
     ClientGrpc client = new ClientGrpc("localhost", 8080);
     
     try {
       System.out.println("Realizando operaciones...");
 
-      int initialTime = (int) System.currentTimeMillis();
+      long initialTime = System.currentTimeMillis();
+      long initialMemory = usedMemoryBytes();
 
       System.out.println("Suma:");
       client.add(10, 5);
@@ -77,9 +88,14 @@ public class ClientGrpc {
       System.out.println("Division:");
       client.div(10, 5);
 
-      int finalTime = (int) System.currentTimeMillis();
+      long finalTime = System.currentTimeMillis();
+      long finalMemory = usedMemoryBytes();
+      long memoryDelta = finalMemory - initialMemory;
 
       System.out.println("Tiempo total de ejecucion: " + (finalTime - initialTime) + " ms");
+      System.out.println("Memoria inicial usada: " + formatMb(initialMemory));
+      System.out.println("Memoria final usada: " + formatMb(finalMemory));
+      System.out.println("Variacion neta de memoria: " + formatMb(memoryDelta));
 
 
     } finally {
