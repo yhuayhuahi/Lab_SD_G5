@@ -1,9 +1,9 @@
 package com.lab.grpc.converter;
 
-import java.io.IOException; // IOException para que el main pueda lanzar esta excepción
+import java.io.IOException; 
 import java.util.logging.Logger; // logger para imprimir mensajes de estado en el servidor
 
-import com.lab.grpc.converter.ConverterProto.ConvertRequest; // se importan las clases generadas por protoc a partir del .proto
+import com.lab.grpc.converter.ConverterProto.ConvertRequest; // importan las clases generadas por protoc a partir del .proto
 import com.lab.grpc.converter.ConverterProto.ConvertResponse;
 
 import io.grpc.Server; // clases de gRPC para crear el servidor y manejar las conexiones
@@ -14,35 +14,35 @@ public class ConverterServer {
 
     private static final Logger logger = Logger.getLogger(ConverterServer.class.getName());
 
-    private static final int PORT = 50051;
+    private static final int PORT = 50051; // puerto en q escuchará el servidor
 
-    private static final double TASA_SOL_USD = 0.27;
+    private static final double TASA_SOL_USD = 0.27; // tasa como valor constante
 
     private Server server;
 
     public void start() throws IOException {
 
-        server = ServerBuilder
-                .forPort(PORT)
-                .addService(new ConverterServiceImpl())
-                .build()
+        server = ServerBuilder    // construye 
+                .forPort(PORT) // forPort lo q hace es configurar el puerto
+                .addService(new ConverterServiceImpl()) // addService agrega ConverterServiceImpl que maneja solicitudes
+                .build() // construye con esa configuracion
                 .start();
 
         logger.info("Servidor gRPC iniciado en puerto " + PORT);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> { // cuando se recibe una señal como ctrlc
             logger.info("Apagando servidor...");
             ConverterServer.this.stop();
         }));
     }
 
-    public void stop() {
+    public void stop() { // stop para apagar
         if (server != null) {
             server.shutdown();
         }
     }
 
-    public void blockUntilShutdown() throws InterruptedException {
+    public void blockUntilShutdown() throws InterruptedException { // mantenerlo ejecutandose
         if (server != null) {
             server.awaitTermination();
         }
@@ -57,25 +57,25 @@ public class ConverterServer {
         server.blockUntilShutdown();
     }
 
-    static class ConverterServiceImpl extends ConverterGrpc.ConverterImplBase {
+    static class ConverterServiceImpl extends ConverterGrpc.ConverterImplBase { // extiende la clase generada por protoc para implementar el servicio definido en el .proto
 
         @Override
-        public void convert(ConvertRequest req, StreamObserver<ConvertResponse> obs) {
-
+        public void convert(ConvertRequest req, StreamObserver<ConvertResponse> obs) { // maneja solicitudes de conversion
+            // streamobserver se usa para enviar la respuesta de forma asíncrona al cliente, el servidor puede procesar otras solicitudes mientras espera enviar la respuesta a este cliente
             String tipo = req.getType().trim().toLowerCase();
 
             double valor = req.getValue();
 
-            logger.info("[PETICION] tipo=" + tipo + " valor=" + valor);
+            logger.info("[PETICION] tipo=" + tipo + " valor=" + valor); // log de la solicitud
 
-            ConvertResponse resp;
+            ConvertResponse resp; // almacena respuesta
 
-            if (Double.isNaN(valor) || Double.isInfinite(valor)) {
+            if (Double.isNaN(valor) || Double.isInfinite(valor)) { 
 
                 resp = error("Número inválido.");
 
-                obs.onNext(resp);
-                obs.onCompleted();
+                obs.onNext(resp); // envia la respuesta de error al cliente
+                obs.onCompleted(); // completa y termina la comunicacion
                 return;
             }
 
@@ -95,7 +95,7 @@ public class ConverterServer {
 
                 case "celsius_kelvin":
 
-                    if (valor < -273.15) {
+                    if (valor < -273.15) { // kelvin no puede ser negativo
                         resp = error("No existe temperatura menor a -273.15 °C");
                         break;
                     }
@@ -106,7 +106,7 @@ public class ConverterServer {
 
                 case "kelvin_celsius":
 
-                    if (valor < 0) {
+                    if (valor < 0) { // kelvin no puede ser negativo
                         resp = error("No existe Kelvin negativo");
                         break;
                     }
@@ -117,7 +117,7 @@ public class ConverterServer {
 
                 case "fahrenheit_kelvin":
 
-                    if (valor < -459.67) {
+                    if (valor < -459.67) { // temperatura más baja posible en Fahrenheit
                         resp = error("No existe temperatura menor a -459.67 °F");
                         break;
                     }
@@ -130,7 +130,7 @@ public class ConverterServer {
 
                 case "kelvin_fahrenheit":
 
-                    if (valor < 0) {
+                    if (valor < 0) { // kelvin no puede ser negativo
                         resp = error("No existe Kelvin negativo");
                         break;
                     }
@@ -269,7 +269,7 @@ public class ConverterServer {
             obs.onCompleted();
         }
 
-        private ConvertResponse ok(double resultado, String descripcion) {
+        private ConvertResponse ok(double resultado, String descripcion) { // respuesta success con el resultado y la descripción 
 
             return ConvertResponse.newBuilder()
                     .setResult(resultado)
@@ -278,7 +278,7 @@ public class ConverterServer {
                     .build();
         }
 
-        private ConvertResponse error(String mensaje) {
+        private ConvertResponse error(String mensaje) { // respuesta de error sin resultado ni descripcion
 
             return ConvertResponse.newBuilder()
                     .setSuccess(false)

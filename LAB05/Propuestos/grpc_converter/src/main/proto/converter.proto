@@ -8,14 +8,14 @@ service Converter {
   rpc Convert (ConvertRequest) returns (ConvertResponse);
 }
 
-message ConvertRequest {
-  string type = 1;
-  double value = 2;
+message ConvertRequest {                          // mensaje que envia cliente a servidor
+  string type = 1;                                // de conversion que se hara
+  double value = 2;                               // 
 }
 
-message ConvertResponse {
-  double result = 1;
-  string description = 2;
-  bool success = 3;
-  string errorMessage = 4;
+message ConvertResponse {                        // respuesta del servidor
+  double result = 1;                             // 
+  string description = 2;                        // explicacion del resultado
+  bool success = 3;                              // si salio bien o no la conversion
+  string errorMessage = 4;                       // mensaje de error
 }
