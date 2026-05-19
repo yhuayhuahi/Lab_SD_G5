@@ -34,8 +34,8 @@ import io.grpc.StatusRuntimeException;
 
 public class ConverterGUI extends JFrame {
 
-    private final ManagedChannel channel;
-    private final ConverterGrpc.ConverterBlockingStub stub;
+    private final ManagedChannel channel; // para conexion con el servidor 
+    private final ConverterGrpc.ConverterBlockingStub stub; // servicio 
 
     private JComboBox<String> tipoCombo;
     private JTextField valorField;
@@ -43,13 +43,13 @@ public class ConverterGUI extends JFrame {
     private JLabel statusLabel;
 
     public ConverterGUI() {
-        channel = ManagedChannelBuilder.forAddress("localhost", 50051).usePlaintext().build();
-        stub = ConverterGrpc.newBlockingStub(channel);
-        initUI();
+        channel = ManagedChannelBuilder.forAddress("localhost", 50051).usePlaintext().build(); // se conecta al servidor
+        stub = ConverterGrpc.newBlockingStub(channel); // stub bloqueante para hacer llamadas al servidor, es bloqueante porque el cliente esperará la respuesta del servidor antes de continuar
+        initUI(); // inicializa la interfaz 
     }
 
     private void initUI() {
-        setTitle("Sistema de Conversión gRPC - Lab 05 UNSA 2026");
+        setTitle("Sistema de Conversión");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(580, 620);
         setLocationRelativeTo(null);
@@ -72,7 +72,7 @@ public class ConverterGUI extends JFrame {
         JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBackground(Color.WHITE);
         inputPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(33, 97, 140)), "Parámetros de Conversión"));
+                BorderFactory.createLineBorder(new Color(33, 97, 140)), "Parámetros de Conversión")); // panel con borde titulado para los parámetros de conversión
         inputPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -159,33 +159,33 @@ public class ConverterGUI extends JFrame {
 
         add(main);
 
-        btnConvertir.addActionListener(e -> convertir());
+        btnConvertir.addActionListener(e -> convertir()); // al hacer clic en el botón convertir se llama al método convertir() que envía la solicitud al servidor gRPC y muestra el resultado en el área de texto
         valorField.addActionListener(e -> convertir());
     }
 
     private void convertir() {
-        String tipo = (String) tipoCombo.getSelectedItem();
+        String tipo = (String) tipoCombo.getSelectedItem(); // obtiene el tipo de conversión seleccionado en el combo box, es un string como "celsius_fahrenheit"
         double valor;
-        try {
+        try { // si el valor ingresado no es un número válido muestra un mensaje de error y no hace la solicitud al servidor
             valor = Double.parseDouble(valorField.getText().trim());
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Ingresa un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        ConverterProto.ConvertRequest req = ConverterProto.ConvertRequest.newBuilder()
+        ConverterProto.ConvertRequest req = ConverterProto.ConvertRequest.newBuilder() // crea la solicitud de conversión con el tipo y valor ingresados, es un mensaje protobuf que se enviará al servidor gRPC
                 .setType(tipo).setValue(valor).build();
 
-        long inicio = System.currentTimeMillis();
+        long inicio = System.currentTimeMillis(); // para medir el tiempo de respuesta del servidor, se obtiene el tiempo actual en milisegundos antes de hacer la solicitud al servidor gRPC
         try {
-            ConverterProto.ConvertResponse resp = stub.convert(req);
-            long ms = System.currentTimeMillis() - inicio;
+            ConverterProto.ConvertResponse resp = stub.convert(req); // stub bloqueante hace la llamada al servidor con la solicitud de conversión y espera la respuesta, es un mensaje protobuf que contiene el resultado de la conversión o un mensaje de error
+            long ms = System.currentTimeMillis() - inicio; // calcula el tiempo que tardó la respuesta del servidor restando el tiempo actual al tiempo de inicio, esto se muestra en la interfaz gráfica para que el usuario vea cuánto tardó la conversión
             if (resp.getSuccess()) {
-                resultArea.append("✓ " + resp.getDescription() + "\n");
+                resultArea.append("✓ " + resp.getDescription() + "\n"); // append para agregar texto al área de resultados, muestra la descripción de la conversión realizada, por ejemplo "100.0 Celsius = 212.0 Fahrenheit"
                 resultArea.append("  Resultado: " + String.format("%.6f", resp.getResult())
                         + "  |  Tiempo: " + ms + " ms\n");
                 resultArea.append("─────────────────────────────────\n");
-                statusLabel.setText("OK - última consulta: " + ms + " ms");
+                statusLabel.setText("OK - última consulta: " + ms + " ms"); // muestra en el status que la última consulta fue exitosa y el tiempo que tardó
                 statusLabel.setForeground(new Color(39, 174, 96));
             } else {
                 resultArea.append("✗ ERROR: " + resp.getErrorMessage() + "\n");
@@ -201,7 +201,7 @@ public class ConverterGUI extends JFrame {
     }
 
     public static void main(String[] args) throws Exception {
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        SwingUtilities.invokeLater(() -> new ConverterGUI().setVisible(true));
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); // 
+        SwingUtilities.invokeLater(() -> new ConverterGUI().setVisible(true)); // para iniciar la interfaz gráfica en el hilo de eventos de Swing, se crea una instancia de ConverterGUI y se hace visible
     }
 }
