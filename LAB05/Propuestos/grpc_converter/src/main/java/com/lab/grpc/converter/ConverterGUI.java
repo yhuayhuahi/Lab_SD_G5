@@ -25,6 +25,9 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import com.lab.grpc.converter.ConverterGrpc;
+import com.lab.grpc.converter.ConverterProto;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -69,39 +72,60 @@ public class ConverterGUI extends JFrame {
         JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBackground(Color.WHITE);
         inputPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(33, 97, 140)), "Parámetros de Conversión"));
+                BorderFactory.createLineBorder(new Color(33, 97, 140)), "Parámetros de Conversión"));
         inputPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0;
         inputPanel.add(new JLabel("Tipo de conversión:"), gbc);
 
         tipoCombo = new JComboBox<>(new String[]{
-            "celsius_fahrenheit", "fahrenheit_celsius",
-            "soles_dolares", "dolares_soles",
-            "km_millas", "millas_km"
+            "celsius_fahrenheit",
+            "fahrenheit_celsius",
+            "celsius_kelvin",
+            "kelvin_celsius",
+            "fahrenheit_kelvin",
+            "kelvin_fahrenheit",
+            "soles_dolares",
+            "dolares_soles",
+            "km_millas",
+            "millas_km",
+            "kg_g",
+            "g_kg",
+            "kg_lb",
+            "lb_kg",
+            "mg_g",
+            "g_mg"
         });
         tipoCombo.setFont(new Font("Arial", Font.PLAIN, 13));
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         inputPanel.add(tipoCombo, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0;
         inputPanel.add(new JLabel("Valor a convertir:"), gbc);
 
         valorField = new JTextField("100.0");
         valorField.setFont(new Font("Arial", Font.PLAIN, 13));
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         inputPanel.add(valorField, gbc);
 
         JButton btnConvertir = new JButton("  Convertir  ");
         btnConvertir.setBackground(new Color(33, 97, 140));
-        btnConvertir.setForeground(Color.WHITE);
+        btnConvertir.setForeground(Color.BLACK);
         btnConvertir.setFont(new Font("Arial", Font.BOLD, 14));
         btnConvertir.setFocusPainted(false);
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
         inputPanel.add(btnConvertir, gbc);
 
         main.add(inputPanel);
@@ -111,7 +135,7 @@ public class ConverterGUI extends JFrame {
         JPanel resultPanel = new JPanel(new BorderLayout(5, 5));
         resultPanel.setBackground(Color.WHITE);
         resultPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(33, 97, 140)), "Resultados"));
+                BorderFactory.createLineBorder(new Color(33, 97, 140)), "Resultados"));
 
         resultArea = new JTextArea(12, 40);
         resultArea.setEditable(false);

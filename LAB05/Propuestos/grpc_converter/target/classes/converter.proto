@@ -1,20 +1,21 @@
 syntax = "proto3";
 
-option java_package = "com.lab.grpc.converter";
+option java_multiple_files = true;
+option java_package = "com.mycompany.converter";
 option java_outer_classname = "ConverterProto";
 
 service Converter {
-    rpc Convert (ConvertRequest) returns (ConvertResponse);
+  rpc Convert (ConvertRequest) returns (ConvertResponse);
 }
 
 message ConvertRequest {
-    string type  = 1;
-    double value = 2;
+  string type = 1;
+  double value = 2;
 }
 
 message ConvertResponse {
-    double result        = 1;
-    string description   = 2;
-    bool   success       = 3;
-    string error_message = 4;
+  double result = 1;
+  string description = 2;
+  bool success = 3;
+  string errorMessage = 4;
 }
