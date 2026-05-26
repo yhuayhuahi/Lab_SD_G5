@@ -16,6 +16,6 @@ public class CalculatorServer {
 
         System.out.println("Servidor iniciado en puerto 50051");
 
-        server.awaitTermination();
+        server.awaitTermination(); // espera señal de terminar
     }
 }
