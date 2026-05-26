@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Biblioteca API</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <main class="page">
+        <header class="hero">
+            <p class="eyebrow">API REST Biblioteca</p>
+            <h1>Panel simple de libros</h1>
+            <p class="lead">Lista, registra, busca y elimina libros desde la interfaz.</p>
+        </header>
+
+        <section class="grid">
+            <div class="card">
+                <h2>Registrar libro</h2>
+                <form id="form-crear" class="form">
+                    <label>
+                        Titulo
+                        <input id="titulo" type="text" required>
+                    </label>
+                    <label>
+                        Autor
+                        <input id="autor" type="text" required>
+                    </label>
+                    <label>
+                        Resumen
+                        <textarea id="resumen" rows="3" required></textarea>
+                    </label>
+                    <button type="submit">Guardar</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Buscar por ID</h2>
+                <form id="form-buscar" class="form inline">
+                    <label class="inline">
+                        ID
+                        <input id="buscar-id" type="number" min="1" required>
+                    </label>
+                    <button type="submit">Buscar</button>
+                </form>
+                <pre id="resultado-buscar" class="result"></pre>
+            </div>
+
+            <div class="card">
+                <h2>Eliminar por ID</h2>
+                <form id="form-eliminar" class="form inline">
+                    <label class="inline">
+                        ID
+                        <input id="eliminar-id" type="number" min="1" required>
+                    </label>
+                    <button type="submit" class="danger">Eliminar</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="list-header">
+                <h2>Listado de libros</h2>
+                <button id="btn-recargar" type="button">Recargar</button>
+            </div>
+            <div id="estado" class="status"></div>
+            <div id="lista" class="list"></div>
+        </section>
+    </main>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
