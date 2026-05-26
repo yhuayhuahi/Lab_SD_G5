@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Papelera</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/">Inicio</a>
+    <a href="/estudiantes-view">Estudiantes</a>
+    <a href="/papelera-view">Papelera</a>
+</nav>
+
+<main class="contenedor">
+
+    <section class="card">
+        <h1>Papelera de reciclaje</h1>
+        <p>Los estudiantes eliminados pueden restaurarse o eliminarse definitivamente vaciando la papelera.</p>
+
+        <div class="botones-menu">
+            <a class="btn btn-guardar" href="/estudiantes-view">Regresar a estudiantes</a>
+            <button class="btn btn-papelera" onclick="vaciarPapelera()">Vaciar papelera</button>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Estudiantes eliminados</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Edad</th>
+                    <th>Carrera</th>
+                    <th>Correo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaPapelera"></tbody>
+        </table>
+    </section>
+
+</main>
+
+<script src="/static/app.js"></script>
+<script>
+    cargarPapelera();
+</script>
+
+</body>
+</html>
