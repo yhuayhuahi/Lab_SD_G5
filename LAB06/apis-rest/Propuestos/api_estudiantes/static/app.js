@@ -1,39 +1,39 @@
-const API = "http://127.0.0.1:5000";
+const API = "http://127.0.0.1:5000"; // URL base de la API
 
 let estudiantesGlobal = [];
-let editando = false;
-let idEditando = null;
+let editando = false; // controla si el modal se abrió para editar o crear un nuevo estudiante
+let idEditando = null; // id de estudiante q se edita, null si se crea uno nuevo
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => { // Cargar datos iniciales, estos datos provienen de la API, no del localStorage
     cargarTodo();
 
-    const formulario = document.getElementById("formulario");
-    formulario.addEventListener("submit", guardarEstudiante);
+    const formulario = document.getElementById("formulario"); // form del modal
+    formulario.addEventListener("submit", guardarEstudiante); // al enviar el formulario, se llama a la función guardarEstudiante
 });
 
-function mostrarVista(id) {
-    document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
-    document.getElementById(id).classList.add("activa");
+function mostrarVista(id) { // para mostrar la vista y cargar sus datos
+    document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa")); // se ocultan todas las vistas
+    document.getElementById(id).classList.add("activa"); // vista selecccionada, se usa el id 
 
-    document.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("activo"));
+    document.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("activo")); // se desactiva 
     event.target.classList.add("activo");
 
     cargarTodo();
 }
 
-async function cargarTodo() {
-    await cargarEstudiantes();
+async function cargarTodo() { // async porque se hacen varias llamadas a la API, se espera a que cada una termine antes de continuar con la siguiente
+    await cargarEstudiantes(); // carga estudiantes activos
     await cargarPapelera();
     await cargarEstadisticas();
 }
 
 function abrirModal(estudiante = null) {
     limpiarFormulario();
-    document.getElementById("modal").classList.add("activo");
+    document.getElementById("modal").classList.add("activo"); // se muestra el modal
 
     if (estudiante) {
         editando = true;
-        idEditando = estudiante.id;
+        idEditando = estudiante.id; // guarda el id
 
         document.getElementById("tituloModal").textContent = "Actualizar estudiante";
         document.getElementById("btnGuardar").textContent = "Actualizar";
@@ -54,7 +54,7 @@ function cerrarModal() {
     limpiarFormulario();
 }
 
-async function guardarEstudiante(e) {
+async function guardarEstudiante(e) { // para guardar o actualizar
     e.preventDefault();
     limpiarErrores();
 
@@ -67,21 +67,21 @@ async function guardarEstudiante(e) {
     telefono: document.getElementById("telefono").value.trim()
     };
 
-    const errores = validarFormulario(estudiante);
-    if (Object.keys(errores).length > 0) {
-        mostrarErrores(errores);
+    const errores = validarFormulario(estudiante); // valida datos
+    if (Object.keys(errores).length > 0) { // si hay errores, no se hace la petición a la API
+        mostrarErrores(errores); // 
         return;
     }
 
-    let url = `${API}/estudiantes`;
-    let metodo = "POST";
+    let url = `${API}/estudiantes`; // URL para crear un nuevo estudiante
+    let metodo = "POST"; // crear
 
     if (editando) {
-        url = `${API}/estudiantes/${idEditando}`;
-        metodo = "PUT";
+        url = `${API}/estudiantes/${idEditando}`; // 
+        metodo = "PUT"; 
     }
 
-    const respuesta = await fetch(url, {
+    const respuesta = await fetch(url, { // peticion a la api
         method: metodo,
         headers: {
             "Content-Type": "application/json"
@@ -89,7 +89,7 @@ async function guardarEstudiante(e) {
         body: JSON.stringify(estudiante)
     });
 
-    const data = await respuesta.json();
+    const data = await respuesta.json(); // respuesta de la API, puede ser un mensaje de éxito o un error 
 
     if (!respuesta.ok) {
         if (data.errores) {
@@ -157,7 +157,7 @@ function validarFormulario(e) {
     return errores;
 }
 
-function mostrarErrores(errores) {
+function mostrarErrores(errores) { // muestra los errores debajo de cada campo y resalta el campo con error
     limpiarErrores();
 
     Object.keys(errores).forEach(campo => {
@@ -169,7 +169,7 @@ function mostrarErrores(errores) {
     });
 }
 
-function limpiarErrores() {
+function limpiarErrores() { // limpia los mensajes de error y quita el resaltado de los campos
     ["nombre", "apellido", "edad", "carrera", "correo", "telefono"].forEach(campo => {
         const error = document.getElementById("error" + campo.charAt(0).toUpperCase() + campo.slice(1));
         const input = document.getElementById(campo);
@@ -203,7 +203,7 @@ async function cargarEstudiantes() {
     mostrarTablaEstudiantes(estudiantesGlobal);
 }
 
-function filtrarEstudiantes() {
+function filtrarEstudiantes() { // para la busqueda, se compara con todos los campos
     const texto = normalizarTexto(document.getElementById("busqueda").value);
 
     const filtrados = estudiantesGlobal.filter(e =>
@@ -249,12 +249,12 @@ function mostrarTablaEstudiantes(lista) {
     });
 }
 
-async function eliminarEstudiante(id) {
+async function eliminarEstudiante(id) { // la confirmacion aparece de forma nativa
     const seguro = confirm("¿Estás seguro de eliminar este estudiante? Será enviado a la papelera.");
 
     if (!seguro) return;
 
-    const respuesta = await fetch(`${API}/estudiantes/${id}`, {
+    const respuesta = await fetch(`${API}/estudiantes/${id}`, { // se hace la petición a la API para eliminar el estudiante, en realidad se cambia su estado a eliminado
         method: "DELETE"
     });
 
@@ -273,8 +273,8 @@ async function cargarPapelera() {
     const tabla = document.getElementById("tablaPapelera");
     if (!tabla) return;
 
-    const respuesta = await fetch(`${API}/papelera`);
-    const papelera = await respuesta.json();
+    const respuesta = await fetch(`${API}/papelera`); // fetch a la API para obtener los estudiantes eliminados (papelera)
+    const papelera = await respuesta.json(); // array
 
     tabla.innerHTML = "";
 
@@ -295,7 +295,7 @@ async function cargarPapelera() {
                 <td>
                     <div class="acciones">
                         <button class="btn btn-verde" onclick="restaurarEstudiante(${e.id})">Restaurar</button>
-                        <button class="btn btn-rojo" onclick="eliminarPermanente(${e.id})">Eliminar permanentemente</button>
+                        <button class="btn btn-rojo" onclick="eliminarPermanente(${e.id})">Eliminar</button>
                     </div>
                 </td>
             </tr>
@@ -304,7 +304,7 @@ async function cargarPapelera() {
 }
 
 async function restaurarEstudiante(id) {
-    const respuesta = await fetch(`${API}/papelera/restaurar/${id}`, {
+    const respuesta = await fetch(`${API}/papelera/restaurar/${id}`, { // peticion
         method: "POST"
     });
 
@@ -331,7 +331,7 @@ async function vaciarPapelera() {
     const data = await respuesta.json();
 
     alert(data.mensaje);
-    cargarTodo();
+    cargarTodo(); // recarga todo para actualizar la vista de la papelera y las estadísticas
 }
 
 async function cargarEstadisticas() {
@@ -344,30 +344,30 @@ async function cargarEstadisticas() {
 }
 
 async function eliminarPermanente(id) {
-    const seguro = confirm("¿Estás seguro de eliminar permanentemente este estudiante? Esta acción no se podrá deshacer.");
+    const seguro = confirm("¿Estás seguro de eliminar PERMANENTEMENTE este estudiante? Esta acción no se podrá deshacer.");
 
     if (!seguro) return;
 
-    const respuesta = await fetch(`${API}/papelera/${id}`, {
+    const respuesta = await fetch(`${API}/papelera/${id}`, { // peticion
         method: "DELETE"
     });
 
-    const data = await respuesta.json();
+    const data = await respuesta.json(); // respuesta
 
     if (!respuesta.ok) {
         alert(data.error);
         return;
     }
 
-    alert(data.mensaje);
+    alert(data.mensaje); // mensaje de éxito
     cargarTodo();
 }
 
 function normalizarTexto(texto) {
     return String(texto || "")
         .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+        .normalize("NFD")   // descompone para eliminar acentos
+        .replace(/[\u0300-\u036f]/g, ""); 
 }
 
 function exportarEstudiantes() {
@@ -387,28 +387,28 @@ function exportarEstudiantes() {
 
 function exportarCSV(lista) {
     const encabezados = ["id", "nombre", "apellido", "edad", "carrera", "correo", "telefono", "estado", "fecha_registro"];
-
+    // crea las filas del CSV, escapando comillas y manejando valores nulos
     const filas = lista.map(e =>
         encabezados.map(campo => `"${String(e[campo] || "").replace(/"/g, '""')}"`).join(",")
     );
-
+    // combina encabezados y filas en un solo string con formato CSV
     const contenido = [encabezados.join(","), ...filas].join("\n");
     descargarArchivo(contenido, "estudiantes.csv", "text/csv;charset=utf-8;");
 }
 
 function exportarJSON(lista) {
-    const contenido = JSON.stringify(lista, null, 4);
+    const contenido = JSON.stringify(lista, null, 4); // convierte a json
     descargarArchivo(contenido, "estudiantes.json", "application/json");
 }
 
 function descargarArchivo(contenido, nombreArchivo, tipo) {
-    const blob = new Blob([contenido], { type: tipo });
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob([contenido], { type: tipo }); // blob es un objeto que representa un archivo, se crea a partir del contenido y el tipo especificado
+    const url = URL.createObjectURL(blob); // crea url 
 
-    const enlace = document.createElement("a");
-    enlace.href = url;
+    const enlace = document.createElement("a"); // para descargar
+    enlace.href = url; // asigna la url al enlace
     enlace.download = nombreArchivo;
-    enlace.click();
+    enlace.click(); // simula un clic en el enlace para iniciar la descarga
 
     URL.revokeObjectURL(url);
 }
@@ -439,11 +439,11 @@ async function importarEstudiantes() {
     }
 
     const respuesta = await fetch(`${API}/estudiantes/importar`, {
-        method: "POST",
+        method: "POST", // peticion a la API
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json" // cuerpo
         },
-        body: JSON.stringify(datos)
+        body: JSON.stringify(datos) // envia array 
     });
 
     const data = await respuesta.json();
