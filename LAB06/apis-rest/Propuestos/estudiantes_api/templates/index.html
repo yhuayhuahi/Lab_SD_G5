@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Estudiantes - Dashboard</title>
+    <style>
+        :root {
+            --bg-primary: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8f9fc;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border-color: #e1e8ed;
+            --header-bg: linear-gradient(135deg, #1a3a5c 0%, #2c5a7a 100%);
+            --accent-color: #3498db;
+            --accent-hover: #2980b9;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+            --shadow: rgba(0,0,0,0.1);
+        }
+        
+        body.dark-mode {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #1f2a4a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-color: #2c3e50;
+            --header-bg: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            --shadow: rgba(0,0,0,0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        /* Header */
+        .navbar {
+            background: var(--header-bg);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .logo p {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        .nav-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .theme-toggle {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--accent-color);
+            transform: scale(1.05);
+        }
+        
+        /* Container principal */
+        .main-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        /* Tarjetas de estadísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        
+        /* Formularios */
+        .form-card {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+        
+        .form-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-secondary);
+        }
+        
+        .form-group input, .form-group select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(52,152,219,0.1);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 0.8rem;
+        }
+        
+        /* Tabla de estudiantes */
+        .table-container {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+        
+        .estudiantes-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .estudiantes-table thead {
+            background: var(--bg-tertiary);
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .estudiantes-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        
+        .estudiantes-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .estudiantes-table tbody tr:hover {
+            background: var(--bg-tertiary);
+            transition: background 0.3s;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Papelera */
+        .trash-section {
+            margin-top: 2rem;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        
+        .trash-header {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+        
+        .trash-content {
+            display: none;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .trash-content.show {
+            display: block;
+        }
+        
+        .trash-item {
+            background: var(--bg-primary);
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        /* Alertas */
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .alert-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .alert-error {
+            background: var(--danger);
+            color: white;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1500;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 0 1rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h1>Sistema de Gestión de Estudiantes</h1>
+                <p>Administración académica</p>
+            </div>
+            <div class="nav-controls">
+                <button class="theme-toggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Estudiantes</h3>
+                <div class="stat-number" id="totalEstudiantes">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>En Papelera</h3>
+                <div class="stat-number" id="totalPapelera">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Activos</h3>
+                <div class="stat-number" id="totalActivos">0</div>
+            </div>
+        </div>
+        
+        <!-- Formulario -->
+        <div class="form-card">
+            <div class="form-title">
+                <span></span>
+                <span id="formTitle">Registrar Nuevo Estudiante</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="nombre" placeholder="Nombre">
+                </div>
+                <div class="form-group">
+                    <label>Apellido</label>
+                    <input type="text" id="apellido" placeholder="Apellido">
+                </div>
+                <div class="form-group">
+                    <label>Edad</label>
+                    <input type="number" id="edad" placeholder="Edad">
+                </div>
+                <div class="form-group">
+                    <label>Carrera</label>
+                    <input type="text" id="carrera" placeholder="Carrera">
+                </div>
+                <div class="form-group">
+                    <label>Correo</label>
+                    <input type="email" id="correo" placeholder="correo@ejemplo.com">
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-primary" onclick="guardarEstudiante()" id="btnGuardar">Registrar Estudiante</button>
+                <button class="btn btn-warning" onclick="cancelarEdicion()" id="btnCancelar" style="display:none;">Cancelar</button>
+            </div>
+        </div>
+        
+        <!-- Tabla de estudiantes -->
+        <div class="table-container">
+            <table class="estudiantes-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre Completo</th>
+                        <th>Edad</th>
+                        <th>Carrera</th>
+                        <th>Correo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaEstudiantes">
+                    <tr>
+                        <td colspan="6" class="loading">Cargando estudiantes...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Papelera -->
+        <div class="trash-section">
+            <div class="trash-header" onclick="toggleTrash()">
+                <span>🗑️ Papelera de Reciclaje</span>
+                <span id="trashIcon">▼</span>
+            </div>
+            <div class="trash-content" id="trashContent">
+                <div id="papeleraLista"></div>
+                <button class="btn btn-danger btn-sm" onclick="vaciarPapelera()" style="margin-top: 1rem;">Vaciar Papelera</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let estudianteEditando = null;
+        let datosPapelera = [];
+        
+        // Cargar datos iniciales
+        async function cargarEstudiantes() {
+            try {
+                const response = await fetch('http://localhost:5000/estudiantes');
+                const estudiantes = await response.json();
+                
+                if (Array.isArray(estudiantes)) {
+                    mostrarTabla(estudiantes);
+                    actualizarEstadisticas(estudiantes);
+                } else if (estudiantes.estudiantes) {
+                    mostrarTabla(estudiantes.estudiantes);
+                    actualizarEstadisticas(estudiantes.estudiantes);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlerta('Error al cargar estudiantes', 'error');
+            }
+        }
+        
+        async function cargarPapelera() {
+            try {
+                const response = await fetch('http://localhost:5000/papelera');
+                const papelera = await response.json();
+                datosPapelera = Array.isArray(papelera) ? papelera : (papelera.papelera || []);
+                mostrarPapelera();
+                document.getElementById('totalPapelera').textContent = datosPapelera.length;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        function mostrarTabla(estudiantes) {
+            const tbody = document.getElementById('tablaEstudiantes');
+            
+            if (!estudiantes || estudiantes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay estudiantes registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = estudiantes.map(est => `
+                <tr>
+                    <td>${est.id}</td>
+                    <td>${est.nombre} ${est.apellido || ''}</td>
+                    <td>${est.edad}</td>
+                    <td>${est.carrera}</td>
+                    <td>${est.correo}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-success btn-sm" onclick="editarEstudiante(${est.id})"> Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarEstudiante(${est.id})"> Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function mostrarPapelera() {
+            const container = document.getElementById('papeleraLista');
+            
+            if (!datosPapelera || datosPapelera.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">La papelera está vacía</p>';
+                return;
+            }
+            
+            container.innerHTML = datosPapelera.map(est => `
+                <div class="trash-item">
+                    <div>
+                        <strong>${est.nombre} ${est.apellido || ''}</strong><br>
+                        <small>ID: ${est.id} | Carrera: ${est.carrera}</small>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary btn-sm" onclick="restaurarEstudiante(${est.id})">↩ Restaurar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function guardarEstudiante() {
+            const estudiante = {
+                id: estudianteEditando ? estudianteEditando.id : Date.now(),
+                nombre: document.getElementById('nombre').value,
+                apellido: document.getElementById('apellido').value,
+                edad: parseInt(document.getElementById('edad').value),
+                carrera: document.getElementById('carrera').value,
+                correo: document.getElementById('correo').value
+            };
+            
+            // Validaciones
+            if (!estudiante.nombre || !estudiante.apellido || !estudiante.edad || !estudiante.carrera || !estudiante.correo) {
+                mostrarAlerta('Por favor complete todos los campos', 'error');
+                return;
+            }
+            
+            if (estudiante.edad <= 0 || estudiante.edad > 120) {
+                mostrarAlerta('Edad inválida', 'error');
+                return;
+            }
+            
+            if (!estudiante.correo.includes('@') || !estudiante.correo.includes('.')) {
+                mostrarAlerta('Correo electrónico inválido', 'error');
+                return;
+            }
+            
+            try {
+                let response;
+                if (estudianteEditando) {
+                    response = await fetch(`http://localhost:5000/estudiantes/${estudiante.id}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(estudiante)
+                    });
+                } else {
+                    response = await fetch('http://localhost:5000/estudiantes', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(estudiante)
+                    });
+                }
+                
+                if (response.ok) {
+                    mostrarAlerta(estudianteEditando ? 'Estudiante actualizado' : 'Estudiante registrado', 'success');
+                    cancelarEdicion();
+                    limpiarFormulario();
+                    cargarEstudiantes();
+                    cargarPapelera();
+                } else {
+                    const error = await response.json();
+                    mostrarAlerta(error.error || 'Error al guardar', 'error');
+                }
+            } catch (error) {
+                mostrarAlerta('Error de conexión', 'error');
+            }
+        }
+        
+        async function editarEstudiante(id) {
+            try {
+                const response = await fetch(`http://localhost:5000/estudiantes/${id}`);
+                const estudiante = await response.json();
+                
+                estudianteEditando = estudiante;
+                document.getElementById('nombre').value = estudiante.nombre;
+                document.getElementById('apellido').value = estudiante.apellido || '';
+                document.getElementById('edad').value = estudiante.edad;
+                document.getElementById('carrera').value = estudiante.carrera;
+                document.getElementById('correo').value = estudiante.correo;
+                
+                document.getElementById('formTitle').innerHTML = '<span></span> Editar Estudiante';
+                document.getElementById('btnGuardar').textContent = 'Actualizar Estudiante';
+                document.getElementById('btnCancelar').style.display = 'inline-block';
+                
+                // Scroll al formulario
+                document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                mostrarAlerta('Error al cargar estudiante', 'error');
+            }
+        }
+        
+        async function eliminarEstudiante(id) {
+            if (confirm('¿Está seguro de eliminar este estudiante? Se moverá a la papelera.')) {
+                try {
+                    const response = await fetch(`http://localhost:5000/estudiantes/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        mostrarAlerta('Estudiante movido a la papelera', 'success');
+                        cargarEstudiantes();
+                        cargarPapelera();
+                    } else {
+                        mostrarAlerta('Error al eliminar', 'error');
+                    }
+                } catch (error) {
+                    mostrarAlerta('Error de conexión', 'error');
+                }
+            }
+        }
+        
+        async function restaurarEstudiante(id) {
+            try {
+                const response = await fetch(`http://localhost:5000/papelera/restaurar/${id}`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    mostrarAlerta('Estudiante restaurado', 'success');
+                    cargarEstudiantes();
+                    cargarPapelera();
+                } else {
+                    mostrarAlerta('Error al restaurar', 'error');
+                }
+            } catch (error) {
+                mostrarAlerta('Error de conexión', 'error');
+            }
+        }
+        
+        async function vaciarPapelera() {
+            if (confirm('¿Está seguro de vaciar la papelera? Esta acción no se puede deshacer.')) {
+                try {
+                    const response = await fetch('http://localhost:5000/papelera/vaciar', {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        mostrarAlerta('Papelera vaciada', 'success');
+                        cargarPapelera();
+                    }
+                } catch (error) {
+                    mostrarAlerta('Error de conexión', 'error');
+                }
+            }
+        }
+        
+        function cancelarEdicion() {
+            estudianteEditando = null;
+            limpiarFormulario();
+            document.getElementById('formTitle').innerHTML = '<span></span> Registrar Nuevo Estudiante';
+            document.getElementById('btnGuardar').textContent = 'Registrar Estudiante';
+            document.getElementById('btnCancelar').style.display = 'none';
+        }
+        
+        function limpiarFormulario() {
+            document.getElementById('nombre').value = '';
+            document.getElementById('apellido').value = '';
+            document.getElementById('edad').value = '';
+            document.getElementById('carrera').value = '';
+            document.getElementById('correo').value = '';
+        }
+        
+        function actualizarEstadisticas(estudiantes) {
+            document.getElementById('totalEstudiantes').textContent = estudiantes.length;
+            document.getElementById('totalActivos').textContent = estudiantes.length;
+        }
+        
+        function toggleTrash() {
+            const content = document.getElementById('trashContent');
+            const icon = document.getElementById('trashIcon');
+            content.classList.toggle('show');
+            icon.textContent = content.classList.contains('show') ? '▲' : '▼';
+        }
+        
+        function mostrarAlerta(mensaje, tipo) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo}`;
+            alert.textContent = mensaje;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+        
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const button = document.querySelector('.theme-toggle');
+            const isDark = document.body.classList.contains('dark-mode');
+            button.textContent = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+        
+        // Inicializar
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.theme-toggle').textContent = '☀️ Modo Claro';
+        }
+        
+        cargarEstudiantes();
+        cargarPapelera();
+    </script>
+</body>
+</html>
