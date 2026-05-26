@@ -6,37 +6,48 @@ CORS(app)
 
 estudiantes = []
 papelera = []
+contador_id = 1
 
 
-def validar_estudiante(data, actualizando=False):
-    campos = ["id", "nombre", "apellido", "edad", "carrera", "correo"]
+def validar_estudiante(data):
+    errores = {}
 
-    for campo in campos:
-        if campo not in data or data[campo] in ["", None]:
-            return f"El campo '{campo}' es obligatorio."
+    if not data.get("nombre", "").strip():
+        errores["nombre"] = "El nombre es obligatorio."
 
-    if not isinstance(data["id"], int):
-        return "El ID debe ser un número entero."
+    if not data.get("apellido", "").strip():
+        errores["apellido"] = "El apellido es obligatorio."
 
-    if not isinstance(data["edad"], int) or data["edad"] <= 0:
-        return "La edad debe ser un número entero positivo."
+    if "edad" not in data or data["edad"] in ["", None]:
+        errores["edad"] = "La edad es obligatoria."
+    elif not isinstance(data["edad"], int) or data["edad"] <= 0:
+        errores["edad"] = "La edad debe ser mayor que cero."
 
-    if "@" not in data["correo"] or "." not in data["correo"]:
-        return "El correo debe tener un formato válido."
+    if not data.get("carrera", "").strip():
+        errores["carrera"] = "La carrera es obligatoria."
 
-    if not actualizando:
-        if any(e["id"] == data["id"] for e in estudiantes):
-            return "Ya existe un estudiante activo con ese ID."
+    correo = data.get("correo", "").strip()
+    if not correo:
+        errores["correo"] = "El correo es obligatorio."
+    elif "@" not in correo or "." not in correo:
+        errores["correo"] = "Ingrese un correo válido."
 
-        if any(e["id"] == data["id"] for e in papelera):
-            return "Ese ID está en la papelera. Restaure o vacíe la papelera primero."
-
-    return None
+    return errores
 
 
 @app.route("/")
 def inicio():
     return render_template("index.html")
+
+
+@app.route("/estudiantes-view")
+def estudiantes_view():
+    return render_template("estudiantes.html")
+
+
+@app.route("/papelera-view")
+def papelera_view():
+    return render_template("papelera.html")
 
 
 @app.route("/estudiantes", methods=["GET"])
@@ -56,14 +67,27 @@ def buscar_estudiante(id):
 
 @app.route("/estudiantes", methods=["POST"])
 def registrar_estudiante():
+    global contador_id
+
     data = request.json
-    error = validar_estudiante(data)
+    errores = validar_estudiante(data)
 
-    if error:
-        return jsonify({"error": error}), 400
+    if errores:
+        return jsonify({"errores": errores}), 400
 
-    estudiantes.append(data)
-    return jsonify({"mensaje": "Estudiante registrado correctamente", "estudiante": data}), 201
+    estudiante = {
+        "id": contador_id,
+        "nombre": data["nombre"].strip(),
+        "apellido": data["apellido"].strip(),
+        "edad": data["edad"],
+        "carrera": data["carrera"].strip(),
+        "correo": data["correo"].strip()
+    }
+
+    estudiantes.append(estudiante)
+    contador_id += 1
+
+    return jsonify({"mensaje": "Estudiante registrado correctamente", "estudiante": estudiante}), 201
 
 
 @app.route("/estudiantes/<int:id>", methods=["PUT"])
@@ -74,13 +98,17 @@ def actualizar_estudiante(id):
     if estudiante is None:
         return jsonify({"error": "Estudiante no encontrado"}), 404
 
-    data["id"] = id
-    error = validar_estudiante(data, actualizando=True)
+    errores = validar_estudiante(data)
 
-    if error:
-        return jsonify({"error": error}), 400
+    if errores:
+        return jsonify({"errores": errores}), 400
 
-    estudiante.update(data)
+    estudiante["nombre"] = data["nombre"].strip()
+    estudiante["apellido"] = data["apellido"].strip()
+    estudiante["edad"] = data["edad"]
+    estudiante["carrera"] = data["carrera"].strip()
+    estudiante["correo"] = data["correo"].strip()
+
     return jsonify({"mensaje": "Estudiante actualizado correctamente", "estudiante": estudiante}), 200
 
 
@@ -108,9 +136,6 @@ def restaurar_estudiante(id):
 
     if estudiante is None:
         return jsonify({"error": "Estudiante no encontrado en la papelera"}), 404
-
-    if any(e["id"] == id for e in estudiantes):
-        return jsonify({"error": "No se puede restaurar porque ya existe un estudiante activo con ese ID"}), 409
 
     papelera.remove(estudiante)
     estudiantes.append(estudiante)

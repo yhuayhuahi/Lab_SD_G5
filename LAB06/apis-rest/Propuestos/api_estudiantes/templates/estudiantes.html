@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Estudiantes</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/">Inicio</a>
+    <a href="/estudiantes-view">Estudiantes</a>
+    <a href="/papelera-view">Papelera</a>
+</nav>
+
+<main class="contenedor">
+
+    <section class="card">
+        <h1>Gestión de Estudiantes</h1>
+        <p>Registra, consulta, actualiza y elimina estudiantes mediante una API RESTful.</p>
+    </section>
+
+    <section class="card">
+        <h2>Registrar / Actualizar estudiante</h2>
+
+        <form id="formulario">
+            <div class="campo">
+                <label>Nombre</label>
+                <input type="text" id="nombre">
+                <span class="error" id="errorNombre"></span>
+            </div>
+
+            <div class="campo">
+                <label>Apellido</label>
+                <input type="text" id="apellido">
+                <span class="error" id="errorApellido"></span>
+            </div>
+
+            <div class="campo">
+                <label>Edad</label>
+                <input type="number" id="edad">
+                <span class="error" id="errorEdad"></span>
+            </div>
+
+            <div class="campo">
+                <label>Carrera</label>
+                <input type="text" id="carrera">
+                <span class="error" id="errorCarrera"></span>
+            </div>
+
+            <div class="campo">
+                <label>Correo</label>
+                <input type="email" id="correo">
+                <span class="error" id="errorCorreo"></span>
+            </div>
+
+            <div class="botones-formulario">
+                <button type="submit" class="btn btn-guardar" id="btnGuardar">Guardar</button>
+                <button type="button" class="btn btn-limpiar" onclick="limpiarFormulario()">Limpiar</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card">
+        <h2>Consultar estudiantes</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID automático</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Edad</th>
+                    <th>Carrera</th>
+                    <th>Correo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaEstudiantes"></tbody>
+        </table>
+    </section>
+
+</main>
+
+<script src="/static/app.js"></script>
+<script>
+    cargarEstudiantes();
+</script>
+
+</body>
+</html>
