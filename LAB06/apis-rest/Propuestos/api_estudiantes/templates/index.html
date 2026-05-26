@@ -19,8 +19,7 @@
         </div>
 
         <button onclick="mostrarVista('dashboard')" class="menu-btn activo">Inicio</button>
-        <button onclick="mostrarVista('registrar')" class="menu-btn">Registrar estudiante</button>
-        <button onclick="mostrarVista('consultar')" class="menu-btn">Consultar estudiantes</button>
+        <button onclick="mostrarVista('consultar')" class="menu-btn">Estudiantes</button>
         <button onclick="mostrarVista('papelera')" class="menu-btn">Papelera</button>
     </aside>
 
@@ -59,32 +58,21 @@
             </div>
         </section>
 
-        <section id="registrar" class="vista">
-    <div class="encabezado">
-        <div>
-            <h1>Registrar estudiante</h1>
-            <p>El registro se realiza mediante un formulario emergente para mantener una interfaz limpia.</p>
-        </div>
-        <button class="btn btn-verde" onclick="abrirModal()">Nuevo estudiante</button>
-    </div>
-
-    <div class="panel centro">
-        <h2>Registro de estudiantes</h2>
-        <p>Presiona el botón “Nuevo estudiante” para abrir el formulario. El ID se genera automáticamente.</p>
-    </div>
-</section>
-
         <section id="consultar" class="vista">
             <div class="encabezado">
                 <div>
-                    <h1>Consultar estudiantes</h1>
-                    <p>Busca, edita o elimina estudiantes registrados.</p>
+                    <h1>Estudiantes</h1>
+                    <p>Gestiona el registro, búsqueda, actualización y eliminación de estudiantes</p>
                 </div>
                 <button class="btn btn-verde" onclick="abrirModal()">Nuevo estudiante</button>
             </div>
 
             <div class="panel">
-                <input type="text" id="busqueda" placeholder="Buscar por ID, nombre, apellido, carrera, correo o estado" oninput="filtrarEstudiantes()">
+               <input 
+                    type="text" 
+                    id="busqueda" 
+                    placeholder="Buscar estudiantes por ID, nombre, apellido, carrera, correo, teléfono o estado"
+                    oninput="filtrarEstudiantes()">
                 <div class="barra-herramientas">
     <div>
         <label>Formato de exportación</label>
@@ -155,7 +143,7 @@
     <div class="modal-contenido">
         <div class="modal-header">
             <div>
-                <h2 id="tituloModal">Registrar estudiante</h2>
+                <h2 id="tituloModal">Nuevo estudiante</h2>
                 <p>Complete los datos solicitados.</p>
             </div>
             <button class="cerrar" onclick="cerrarModal()">Cerrar</button>

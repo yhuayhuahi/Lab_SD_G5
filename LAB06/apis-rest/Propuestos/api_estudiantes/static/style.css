@@ -373,3 +373,8 @@ select:focus {
     background: #e0f2fe;
     padding: 6px;
 }
+
+#busqueda::placeholder {
+    color: #94a3b8;
+    font-size: 14px;
+}
