@@ -7,7 +7,7 @@ import java.rmi.NotBoundException;
 
 public class CalculatorClient {
 
-  private static final long MB = 1024L * 1024L;
+  private static final long MB = 1024L * 1024L; // constante para convertir bytes a megabytes
 
   private static long usedMemoryBytes() {
     Runtime runtime = Runtime.getRuntime();

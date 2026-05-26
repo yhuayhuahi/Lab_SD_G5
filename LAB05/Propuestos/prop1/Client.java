@@ -9,7 +9,7 @@ public class Client {
 
             // Conectarse al servidor
             Calculator calculator = (Calculator)
-                    Naming.lookup("rmi://localhost/CalculatorService");
+                    Naming.lookup("rmi://localhost/CalculatorService"); // busca el servicio remoto registrado con el nombre "CalculatorService" en el servidor RMI que se ejecuta en localhost
 
             Scanner sc = new Scanner(System.in);
 
