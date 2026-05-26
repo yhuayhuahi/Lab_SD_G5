@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inicio</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/">Inicio</a>
+    <a href="/estudiantes-view">Estudiantes</a>
+    <a href="/papelera-view">Papelera</a>
+</nav>
+
+<main class="contenedor">
+    <section class="card centro">
+        <h1>Sistema de Gestión de Estudiantes</h1>
+        <p>Aplicación cliente-servidor con API RESTful desarrollada en Flask, HTML, CSS y JavaScript.</p>
+
+        <div class="botones-menu">
+            <a class="btn btn-guardar" href="/estudiantes-view">Gestionar estudiantes</a>
+            <a class="btn btn-papelera" href="/papelera-view">Ver papelera</a>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Funciones implementadas</h2>
+        <ul>
+            <li>Registrar estudiante con ID automático.</li>
+            <li>Consultar estudiantes registrados.</li>
+            <li>Actualizar datos de estudiantes.</li>
+            <li>Eliminar estudiantes con confirmación.</li>
+            <li>Enviar registros eliminados a papelera.</li>
+            <li>Restaurar estudiantes desde papelera.</li>
+            <li>Validar campos con mensajes debajo del input.</li>
+        </ul>
+    </section>
+</main>
+
+</body>
+</html>
