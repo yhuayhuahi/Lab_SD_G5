@@ -84,15 +84,19 @@ def validar(data, editando=False, id_actual=None):
     elif not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", correo):
         errores["correo"] = "Ingrese un correo válido."
 
-    existente = Estudiante.query.filter_by(correo=correo).first()
-    if existente and (not editando or existente.id != id_actual):
-        errores["correo"] = "Este correo ya está registrado."
-
     telefono = data.get("telefono", "").strip()
     if not telefono:
         errores["telefono"] = "El teléfono es obligatorio."
     elif not re.match(r"^9\d{8}$", telefono):
         errores["telefono"] = "El teléfono debe tener 9 dígitos y empezar con 9."
+
+    existente_correo = Estudiante.query.filter_by(correo=correo).first()
+    if existente_correo and (not editando or existente_correo.id != id_actual):
+        errores["correo"] = "Este correo ya está registrado."
+
+    existente_telefono = Estudiante.query.filter_by(telefono=telefono).first()
+    if existente_telefono and (not editando or existente_telefono.id != id_actual):
+        errores["telefono"] = "Este número ya está registrado."
 
     return errores
 
