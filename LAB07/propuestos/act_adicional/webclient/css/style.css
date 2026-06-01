@@ -1,0 +1,120 @@
+/* RESETS Y CONFIGURACIÓN BASE */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f3f0f8; /* Fondo general lila muy claro */
+    color: #332547; /* Texto oscuro con un toque morado */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Empuja el footer abajo si la pantalla es alta */
+    align-items: center;
+}
+
+/* HEADER Y FOOTER */
+header {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    color: #5b3194; /* Morado principal */
+    font-weight: 600;
+}
+
+footer {
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: #8e7aa7;
+}
+
+/* CONTENEDOR PRINCIPAL */
+#container {
+    background-color: #ffffff; /* Tarjeta blanca para el tema claro */
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(91, 49, 148, 0.1); /* Sombra suave morada */
+    width: 100%;
+    max-width: 400px; /* Ancho máximo para que no se deforme en PC */
+    margin: 2rem 1rem; /* Margen para pantallas móviles */
+}
+
+/* Sección de los inputs */
+.numbers_cont {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.lbl {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6e48aa;
+    margin-top: 0.5rem;
+}
+
+.number {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #e1d8ee;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    color: #332547;
+    background-color: #faf9fc;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+/* Efecto focus al escribir en los inputs */
+.number:focus {
+    border-color: #8a53db;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(138, 83, 219, 0.15);
+}
+
+/* Sección de los botones */
+.operations_cont {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Rejilla de 2x2 botones */
+    gap: 0.8rem;
+}
+
+.btn {
+    padding: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #8a53db; /* Boton morado vibrante */
+    color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+/* Efectos para los botones */
+.btn:hover {
+    background-color: #7139c4; /* Morado un poco más oscuro al pasar el cursor */
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    background-color: #5b3194;
+    transform: translateY(1px); /* Efecto de hundimiento al hacer clic */
+}
+
+#ok {
+    color: green;
+    padding: 0.5rem;
+}
+
+#error {
+    color: red;
+    padding: 0.5rem;
+}
