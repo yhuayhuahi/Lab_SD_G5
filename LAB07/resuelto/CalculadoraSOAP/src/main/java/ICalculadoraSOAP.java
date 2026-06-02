@@ -1,7 +1,8 @@
 import javax.jws.WebMethod;
 import javax.jws.WebService;
-
-@WebService(targetNamespace = "http://servicio.soap/")
+// para que el cliente sepa que esta clase forma parte del servicio 
+// puede obviarse pero es una buena practica 
+@WebService(targetNamespace = "http://servicio.soap/") 
 public interface ICalculadoraSOAP {
 
     @WebMethod
