@@ -1,9 +1,12 @@
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 
-@WebService(targetNamespace = "http://servicio.soap/")
-public class CalculadoraSOAP {
-
+@WebService(
+    endpointInterface = "ICalculadoraSOAP",
+    targetNamespace = "http://servicio.soap/"
+)
+public class CalculadoraSOAP implements ICalculadoraSOAP {
+  
     @WebMethod
     public int sumar(int a, int b) {
         return a + b;

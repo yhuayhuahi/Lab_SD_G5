@@ -1,3 +1,4 @@
 CalculadoraSOAP.class
-Publicador.class
 ClienteSOAP.class
+ICalculadoraSOAP.class
+Publicador.class
