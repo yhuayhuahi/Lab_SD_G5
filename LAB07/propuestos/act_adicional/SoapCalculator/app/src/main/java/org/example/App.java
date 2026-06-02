@@ -17,20 +17,20 @@ public class App {
         int puerto = 8080;
         String ruta = "/calculadora";
     
-        // 1. Creamos el servidor HTTP manualmente en el puerto 8080
+        // Creamos el servidor HTTP manualmente en el puerto 8080
         HttpServer server = HttpServer.create(new InetSocketAddress(puerto), 0);
     
-        // 2. Creamos el contexto (la ruta) para el servicio
+        // Creamos el contexto (la ruta) para el servicio
         HttpContext context = server.createContext(ruta);
     
-        // 3. Añadimos el Filtro para interceptar y meter las cabeceras CORS
+        // Añadimos el Filtro para interceptar y meter las cabeceras CORS
         context.getFilters().add(new Filter() {
             @Override
             public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
                 // Agregamos las cabeceras CORS obligatorias
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-                // NOTA: Es vital incluir 'SOAPAction' ya que los clientes SOAP antiguos/estándar la envían
+                // Es vital incluir 'SOAPAction' ya que los clientes SOAP antiguos/estándar la envían
                 exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Authorization, SOAPAction");
 
                 // El navegador siempre envía un 'OPTIONS' antes de la petición real (Preflight)
@@ -52,11 +52,11 @@ public class App {
     
         System.out.println("Publicando servicio SOAP con CORS habilitado en: http://localhost:" + puerto + ruta);
     
-        // 4. Instanciamos el Endpoint y lo asociamos a nuestro contexto HTTP modificado
+        // Instanciamos el Endpoint y lo asociamos a nuestro contexto HTTP modificado
         Endpoint endpoint = Endpoint.create(new CalculadoraSOAPImpl());
         endpoint.publish(context);
     
-        // 5. Encendemos el servidor
+        // Encendemos el servidor
         server.start();
     
         System.out.println("Servicio publicado exitosamente.");
