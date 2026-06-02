@@ -1,3 +1,4 @@
+import java.net.URI;
 import java.net.URL;
 import java.util.Scanner;
 
@@ -8,26 +9,20 @@ public class ClienteSOAP {
 
     public static void main(String[] args) throws Exception {
         ICalculadoraSOAP calculadora = conectarServicio();
-        Scanner sc = new Scanner(System.in);
 
-        int opcion;
-        do {
-            mostrarMenu();
-            opcion = leerInt(sc, "Opción: ");
+        try (Scanner sc = new Scanner(System.in)) {
+            int opcion;
 
-            try {
-                ejecutarOperacion(opcion, sc, calculadora);
-            } catch (Exception e) {
-                System.out.println("Error SOAP: " + e.getMessage());
-            }
-
-        } while (opcion != 0);
-
-        sc.close();
+            do {
+                mostrarMenu();
+                opcion = leerInt(sc, "Opción: ");
+                ejecutar(opcion, sc, calculadora);
+            } while (opcion != 0);
+        }
     }
 
     private static ICalculadoraSOAP conectarServicio() throws Exception {
-        URL url = new URL("http://localhost:8080/calculadora?wsdl");
+        URL url = URI.create("http://localhost:8080/calculadora?wsdl").toURL();
         QName qname = new QName("http://servicio.soap/", "CalculadoraSOAPService");
 
         Service service = Service.create(url, qname);
@@ -46,79 +41,74 @@ public class ClienteSOAP {
         System.out.println("0. Salir");
     }
 
-    private static void ejecutarOperacion(int opcion, Scanner sc, ICalculadoraSOAP calculadora) {
-        switch (opcion) {
-            case 1: {
-                int a = leerInt(sc, "A: ");
-                int b = leerInt(sc, "B: ");
-                imprimir(calculadora.sumar(a, b));
-                break;
-            }
-
-            case 2: {
-                int a = leerInt(sc, "A: ");
-                int b = leerInt(sc, "B: ");
-                imprimir(calculadora.restar(a, b));
-                break;
-            }
-
-            case 3: {
-                int a = leerInt(sc, "A: ");
-                int b = leerInt(sc, "B: ");
-                imprimir(calculadora.multiplicar(a, b));
-                break;
-            }
-
-            case 4: {
-                double a = leerDouble(sc, "A: ");
-                double b = leerDouble(sc, "B: ");
-
-                if (b == 0) {
-                    System.out.println("Error: no se puede dividir entre cero.");
-                    break;
+    private static void ejecutar(int opcion, Scanner sc, ICalculadoraSOAP c) {
+        try {
+            switch (opcion) {
+                case 1 -> {
+                    int a = leerInt(sc, "A: ");
+                    int b = leerInt(sc, "B: ");
+                    mostrar("SUMA", a + " + " + b, c.sumar(a, b));
                 }
 
-                imprimir(calculadora.dividir(a, b));
-                break;
-            }
-
-            case 5: {
-                double base = leerDouble(sc, "Base: ");
-                double exponente = leerDouble(sc, "Exponente: ");
-                imprimir(calculadora.potencia(base, exponente));
-                break;
-            }
-
-            case 6: {
-                double numero = leerDouble(sc, "Número: ");
-
-                if (numero < 0) {
-                    System.out.println("Error: no existe raíz cuadrada real para números negativos.");
-                    break;
+                case 2 -> {
+                    int a = leerInt(sc, "A: ");
+                    int b = leerInt(sc, "B: ");
+                    mostrar("RESTA", a + " - " + b, c.restar(a, b));
                 }
 
-                imprimir(calculadora.raizCuadrada(numero));
-                break;
-            }
-
-            case 7: {
-                int n = leerInt(sc, "Número: ");
-
-                if (n < 0) {
-                    System.out.println("Error: el factorial no está definido para números negativos.");
-                    break;
+                case 3 -> {
+                    int a = leerInt(sc, "A: ");
+                    int b = leerInt(sc, "B: ");
+                    mostrar("MULTIPLICACIÓN", a + " × " + b, c.multiplicar(a, b));
                 }
 
-                imprimir(calculadora.factorial(n));
-                break;
+                case 4 -> {
+                    double a = leerDouble(sc, "A: ");
+                    double b = leerDouble(sc, "B: ");
+
+                    if (b == 0) {
+                        System.out.println("No se puede dividir entre cero.");
+                        return;
+                    }
+
+                    mostrar("DIVISIÓN", f(a) + " ÷ " + f(b), c.dividir(a, b));
+                }
+
+                case 5 -> {
+                    double base = leerDouble(sc, "Base: ");
+                    double exponente = leerDouble(sc, "Exponente: ");
+                    mostrar("POTENCIA", f(base) + "^" + f(exponente), c.potencia(base, exponente));
+                }
+
+                case 6 -> {
+                    double n = leerDouble(sc, "Número: ");
+
+                    if (n < 0) {
+                        System.out.println("No existe raíz cuadrada real para números negativos.");
+                        return;
+                    }
+
+                    mostrar("RAÍZ CUADRADA", "sqrt(" + f(n) + ")", c.raizCuadrada(n));
+                }
+
+                case 7 -> {
+                    int n = leerInt(sc, "Número: ");
+
+                    if (n < 0) {
+                        System.out.println("El factorial no está definido para números negativos.");
+                        return;
+                    }
+
+                    mostrar("FACTORIAL", n + "!", c.factorial(n));
+                }
+
+                case 0 -> System.out.println("Cliente finalizado.");
+
+                default -> System.out.println("Opción no válida.");
             }
 
-            case 0:
-                System.out.println("Cliente finalizado.");
-                break;
-
-            default:
-                System.out.println("Opción no válida.");
+        } catch (Exception e) {
+            System.out.println("Error SOAP: " + e.getMessage());
         }
     }
 
@@ -132,7 +122,7 @@ public class ClienteSOAP {
                 return valor;
             }
 
-            System.out.println("Error: ingrese un número entero válido.");
+            System.out.println("Ingrese un número entero válido.");
             sc.nextLine();
         }
     }
@@ -147,12 +137,20 @@ public class ClienteSOAP {
                 return valor;
             }
 
-            System.out.println("Error: ingrese un número válido.");
+            System.out.println("Ingrese un número válido.");
             sc.nextLine();
         }
     }
 
-    private static void imprimir(double resultado) {
-        System.out.println("Resultado: " + resultado);
+    private static void mostrar(String operacion, String expresion, double resultado) {
+        System.out.println("\n--- " + operacion + " DE " + expresion + " ---");
+        System.out.println(expresion + " = " + f(resultado));
+    }
+
+    private static String f(double numero) {
+        if (numero == Math.rint(numero)) {
+            return String.valueOf((long) numero);
+        }
+        return String.valueOf(numero);
     }
 }
