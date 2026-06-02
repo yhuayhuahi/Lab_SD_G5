@@ -1,20 +1,22 @@
-import java.net.URI;
-import java.net.URL;
+import java.net.URI; //
+import java.net.URL; // para manejar URLs
 import java.util.Scanner;
 
-import javax.xml.namespace.QName;
-import javax.xml.ws.Service;
+import javax.xml.namespace.QName; // qname 
+import javax.xml.ws.Service; // consumir el servicio SOAP a través de su WSDL
+// q es un XML accesible desde la URL
 
 public class ClienteSOAP {
 
     public static void main(String[] args) throws Exception {
-        ICalculadoraSOAP calculadora = conectarServicio();
+        // aqui la interfaz define operaciones
+        ICalculadoraSOAP calculadora = conectarServicio(); 
 
         try (Scanner sc = new Scanner(System.in)) {
-            int opcion;
+            int opcion; 
 
             do {
-                mostrarMenu();
+                mostrarMenu(); 
                 opcion = leerInt(sc, "Opción: ");
                 ejecutar(opcion, sc, calculadora);
             } while (opcion != 0);
@@ -22,11 +24,12 @@ public class ClienteSOAP {
     }
 
     private static ICalculadoraSOAP conectarServicio() throws Exception {
+        // create para crear un servicio SOAP y toURL para acceder
         URL url = URI.create("http://localhost:8080/calculadora?wsdl").toURL();
         QName qname = new QName("http://servicio.soap/", "CalculadoraSOAPService");
 
-        Service service = Service.create(url, qname);
-        return service.getPort(ICalculadoraSOAP.class);
+        Service service = Service.create(url, qname); // crea el servicio
+        return service.getPort(ICalculadoraSOAP.class); // obtiene el puerto
     }
 
     private static void mostrarMenu() {
@@ -41,6 +44,7 @@ public class ClienteSOAP {
         System.out.println("0. Salir");
     }
 
+    // recibe la interfaz para ejecutar las operaciones 
     private static void ejecutar(int opcion, Scanner sc, ICalculadoraSOAP c) {
         try {
             switch (opcion) {
@@ -141,13 +145,13 @@ public class ClienteSOAP {
             sc.nextLine();
         }
     }
-
+     // formateo
     private static void mostrar(String operacion, String expresion, double resultado) {
         System.out.println("\n--- " + operacion + " DE " + expresion + " ---");
         System.out.println(expresion + " = " + f(resultado));
     }
-
-    private static String f(double numero) {
+      // quita decimales si es int
+    private static String f(double numero) { 
         if (numero == Math.rint(numero)) {
             return String.valueOf((long) numero);
         }
