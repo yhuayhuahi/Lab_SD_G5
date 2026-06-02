@@ -1,30 +1,36 @@
 package soap;
 
+import java.io.File;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpExchange;
-import java.io.*;
-import java.net.*;
-import java.net.http.*;
 
 public class ProxyServidor {
+public static void main(String[] args) throws Exception {
 
-    public static void main(String[] args) throws Exception {
+    HttpServer server = HttpServer.create(new InetSocketAddress(8081), 0);
 
-        HttpServer server = HttpServer.create(new InetSocketAddress(8081), 0);
-
-        // Sirve el archivo HTML
-        server.createContext("/", exchange -> {
+    // Sirve el archivo HTML
+    server.createContext("/", exchange -> {
+        try {
             File f = new File("src/main/resources/index.html");
             byte[] bytes = java.nio.file.Files.readAllBytes(f.toPath());
             exchange.getResponseHeaders().add("Content-Type", "text/html; charset=utf-8");
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.getResponseBody().close();
-        });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    });
 
-        // Proxy hacia el servicio SOAP de ventas
-        server.createContext("/proxy/ventas", exchange -> {
-            // Headers CORS para permitir llamadas desde el navegador
+    // Proxy hacia el servicio SOAP de ventas
+    server.createContext("/proxy/ventas", exchange -> {
+        try {
             exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
             exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
             exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
@@ -50,9 +56,13 @@ public class ProxyServidor {
             exchange.sendResponseHeaders(200, respBytes.length);
             exchange.getResponseBody().write(respBytes);
             exchange.getResponseBody().close();
-        });
 
-        server.start();
-        System.out.println("Proxy + UI activo en: http://localhost:8081");
-    }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    });
+
+    server.start();
+    System.out.println("Proxy + UI activo en: http://localhost:8081");
+}
 }
