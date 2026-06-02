@@ -1,7 +1,7 @@
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 
-@WebService
+@WebService(targetNamespace = "http://servicio.soap/")
 public class CalculadoraSOAP {
 
     @WebMethod
@@ -35,9 +35,7 @@ public class CalculadoraSOAP {
     @WebMethod
     public double raizCuadrada(double numero) {
         if (numero < 0) {
-            throw new ArithmeticException(
-                "No existe raíz cuadrada real para números negativos"
-            );
+            throw new ArithmeticException("No existe raíz cuadrada real para números negativos");
         }
         return Math.sqrt(numero);
     }
@@ -45,13 +43,10 @@ public class CalculadoraSOAP {
     @WebMethod
     public int factorial(int n) {
         if (n < 0) {
-            throw new ArithmeticException(
-                "El factorial no está definido para números negativos"
-            );
+            throw new ArithmeticException("El factorial no está definido para números negativos");
         }
 
         int resultado = 1;
-
         for (int i = 1; i <= n; i++) {
             resultado *= i;
         }

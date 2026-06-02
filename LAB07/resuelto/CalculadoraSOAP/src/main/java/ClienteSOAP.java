@@ -1,13 +1,14 @@
+import java.net.URL;
+
 import javax.xml.namespace.QName;
 import javax.xml.ws.Service;
-import java.net.URL;
 
 public class ClienteSOAP {
 
     public static void main(String[] args) throws Exception {
         URL url = new URL("http://localhost:8080/calculadora?wsdl");
 
-        QName qname = new QName("http:///", "CalculadoraSOAPService");
+        QName qname = new QName("http://servicio.soap/", "CalculadoraSOAPService");
 
         Service service = Service.create(url, qname);
 
