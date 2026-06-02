@@ -26,7 +26,6 @@ public class ClienteSOAP {
       System.out.println("6. Raíz cuadrada");
       System.out.println("7. Factorial");
       System.out.println("0. Salir");
-      System.out.print("Opción: ");
 
       opcion = leerInt(sc, "Opción: ");
 
@@ -69,7 +68,7 @@ public class ClienteSOAP {
             System.out.println("Opción no válida.");
         }
       } catch (Exception e) {
-        System.out.println("Error enviado por el servicio SOAP: operación no válida.");
+        System.out.println("Error enviado por el servicio SOAP: " + e.getMessage());
       }
 
     } while (opcion != 0);
