@@ -1,13 +1,13 @@
-import javax.jws.WebMethod;
+import javax.jws.WebMethod; // Java Web Services
 import javax.jws.WebService;
 
-@WebService(
-    endpointInterface = "ICalculadoraSOAP",
-    targetNamespace = "http://servicio.soap/"
+@WebService( // esto es para que el cliente sepa que esta clase es un servicio SOAP
+    endpointInterface = "ICalculadoraSOAP", // endpoint indica la interfaz que implementa el servicio
+    targetNamespace = "http://servicio.soap/" // espacio para identificar, evitar conflictos con otros servicios SOAP
 )
-public class CalculadoraSOAP implements ICalculadoraSOAP {
-  
-    @WebMethod
+public class CalculadoraSOAP implements ICalculadoraSOAP { // implementa interfaz q define las operaciones 
+
+    @WebMethod // métodos que son expuestos como operaciones del servicio SOAP
     public int sumar(int a, int b) {
         return a + b;
     }
@@ -24,7 +24,7 @@ public class CalculadoraSOAP implements ICalculadoraSOAP {
 
     @WebMethod
     public double dividir(double a, double b) {
-        if (b == 0) {
+        if (b == 0) { // si bien esta excepcion no se ve en cliente, es para evitar errores en el servidor
             throw new ArithmeticException("No se puede dividir entre cero");
         }
         return a / b;
