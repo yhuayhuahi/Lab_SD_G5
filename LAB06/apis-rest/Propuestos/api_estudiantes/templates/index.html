@@ -2,41 +2,215 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Inicio</title>
+    <title>Panel de Estudiantes</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<nav>
-    <a href="/">Inicio</a>
-    <a href="/estudiantes-view">Estudiantes</a>
-    <a href="/papelera-view">Papelera</a>
-</nav>
+<div class="layout">
 
-<main class="contenedor">
-    <section class="card centro">
-        <h1>Sistema de Gestión de Estudiantes</h1>
-        <p>Aplicación cliente-servidor con API RESTful desarrollada en Flask, HTML, CSS y JavaScript.</p>
-
-        <div class="botones-menu">
-            <a class="btn btn-guardar" href="/estudiantes-view">Gestionar estudiantes</a>
-            <a class="btn btn-papelera" href="/papelera-view">Ver papelera</a>
+    <aside class="sidebar">
+        <div class="logo">
+            <<img src="/static/img/logo.png" class="logo-img" alt="Logo del sistema">
+            <div>
+                <h2>Panel Académico</h2>
+                <p>API RESTful</p>
+            </div>
         </div>
-    </section>
 
-    <section class="card">
-        <h2>Funciones implementadas</h2>
-        <ul>
-            <li>Registrar estudiante con ID automático.</li>
-            <li>Consultar estudiantes registrados.</li>
-            <li>Actualizar datos de estudiantes.</li>
-            <li>Eliminar estudiantes con confirmación.</li>
-            <li>Enviar registros eliminados a papelera.</li>
-            <li>Restaurar estudiantes desde papelera.</li>
-            <li>Validar campos con mensajes debajo del input.</li>
-        </ul>
-    </section>
-</main>
+        <button onclick="mostrarVista('dashboard')" class="menu-btn activo">Inicio</button>
+        <button onclick="mostrarVista('consultar')" class="menu-btn">Estudiantes</button>
+        <button onclick="mostrarVista('papelera')" class="menu-btn">Papelera</button>
+    </aside>
 
+    <main class="contenido">
+
+        <section id="dashboard" class="vista activa">
+            <div class="encabezado">
+                <div>
+                    <h1>Dashboard de estudiantes</h1>
+                    <p>Sistema cliente-servidor para gestionar estudiantes mediante una API RESTful.</p>
+                </div>
+                <button class="btn btn-verde" onclick="abrirModal()">Nuevo estudiante</button>
+            </div>
+
+            <div class="cards">
+                <div class="stat">
+                    <span id="statTotal">0</span>
+                    <p>Total registrados</p>
+                </div>
+                <div class="stat">
+                    <span id="statActivos">0</span>
+                    <p>Estudiantes activos</p>
+                </div>
+                <div class="stat">
+                    <span id="statEliminados">0</span>
+                    <p>En papelera</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Resumen del sistema</h2>
+                <p>
+                    Este panel permite registrar, consultar, actualizar y eliminar estudiantes.
+                    Además, incluye validaciones, búsqueda dinámica, papelera de reciclaje y restauración de registros.
+                </p>
+            </div>
+        </section>
+
+        <section id="consultar" class="vista">
+            <div class="encabezado">
+                <div>
+                    <h1>Estudiantes</h1>
+                    <p>Gestiona el registro, búsqueda, actualización y eliminación de estudiantes</p>
+                </div>
+                <button class="btn btn-verde" onclick="abrirModal()">Nuevo estudiante</button>
+            </div>
+
+            <div class="panel">
+               <input 
+                    type="text" 
+                    id="busqueda" 
+                    placeholder="Buscar estudiantes por ID, nombre, apellido, carrera, correo, teléfono o estado"
+                    oninput="filtrarEstudiantes()">
+                <div class="barra-herramientas">
+    <div>
+        <label>Formato de exportación</label>
+        <select id="formatoExportacion">
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+        </select>
+    </div>
+
+    <button class="btn btn-gris" onclick="exportarEstudiantes()">Exportar lista</button>
+
+    <div>
+        <label>Importar lista JSON</label>
+        <input type="file" id="archivoImportar" accept=".json">
+    </div>
+
+    <button class="btn btn-verde" onclick="importarEstudiantes()">Importar lista</button>
+</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre completo</th>
+                            <th>Edad</th>
+                            <th>Carrera</th>
+                            <th>Correo</th>
+                            <th>Teléfono</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaEstudiantes"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="papelera" class="vista">
+            <div class="encabezado">
+                <div>
+                    <h1>Papelera de reciclaje</h1>
+                    <p>Restaura estudiantes eliminados o vacía la papelera definitivamente.</p>
+                </div>
+                <button class="btn btn-gris" onclick="vaciarPapelera()">Vaciar papelera</button>
+            </div>
+
+            <div class="panel">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre completo</th>
+                            <th>Edad</th>
+                            <th>Carrera</th>
+                            <th>Correo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaPapelera"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-contenido">
+        <div class="modal-header">
+            <div>
+                <h2 id="tituloModal">Nuevo estudiante</h2>
+                <p>Complete los datos solicitados.</p>
+            </div>
+            <button class="cerrar" onclick="cerrarModal()">Cerrar</button>
+        </div>
+
+        <form id="formulario">
+            <div class="campo">
+                <label>Nombre</label>
+                <input type="text" id="nombre">
+                <span class="error" id="errorNombre"></span>
+            </div>
+
+            <div class="campo">
+                <label>Apellido</label>
+                <input type="text" id="apellido">
+                <span class="error" id="errorApellido"></span>
+            </div>
+
+            <div class="campo">
+                <label>Edad</label>
+                <input type="number" id="edad">
+                <span class="error" id="errorEdad"></span>
+            </div>
+
+            <div class="campo">
+                <label>Carrera</label>
+                <select id="carrera">
+                    <option value="">Seleccione una carrera</option>
+                    <option value="Ingeniería de Sistemas">Ingeniería de Sistemas</option>
+                    <option value="Ingeniería Industrial">Ingeniería Industrial</option>
+                    <option value="Ingeniería Civil">Ingeniería Civil</option>
+                    <option value="Ingeniería Mecánica">Ingeniería Mecánica</option>
+                    <option value="Ingeniería Eléctrica">Ingeniería Eléctrica</option>
+                    <option value="Ingeniería Electrónica">Ingeniería Electrónica</option>
+                    <option value="Ingeniería de Minas">Ingeniería de Minas</option>
+                    <option value="Ingeniería Metalúrgica">Ingeniería Metalúrgica</option>
+                    <option value="Ingeniería Química">Ingeniería Química</option>
+                    <option value="Agronomía">Agronomía</option>
+                    <option value="Biología">Biología</option>
+                    <option value="Medicina">Medicina</option>
+                    <option value="Derecho">Derecho</option>
+                    <option value="Administración">Administración</option>
+                    <option value="Contabilidad">Contabilidad</option>
+                </select>
+                <span class="error" id="errorCarrera"></span>
+            </div>
+
+            <div class="campo">
+                <label>Correo</label>
+                <input type="email" id="correo">
+                <span class="error" id="errorCorreo"></span>
+            </div>
+
+            <div class="campo">
+                <label>Teléfono</label>
+                <input type="text" id="telefono" maxlength="9" placeholder="Ej. 943912241">
+                <span class="error" id="errorTelefono"></span>
+            </div>
+
+            <div class="acciones-form">
+                <button type="button" class="btn btn-gris" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" class="btn btn-verde" id="btnGuardar">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/static/app.js"></script> // carga el archivo app.js, que contiene toda la lógica de la aplicación
 </body>
 </html>
