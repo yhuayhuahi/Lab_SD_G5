@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tienda SOAP</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
+
+    header {
+      background: #1a73e8; color: white;
+      padding: 16px 32px; font-size: 20px; font-weight: bold;
+    }
+
+    .container { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+
+    .card {
+      background: white; border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px; margin-bottom: 20px;
+    }
+
+    .card h2 { font-size: 16px; color: #1a73e8; margin-bottom: 12px; }
+
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    input[type=number] {
+      border: 1px solid #ccc; border-radius: 4px;
+      padding: 8px 12px; width: 100px; font-size: 14px;
+    }
+
+    button {
+      background: #1a73e8; color: white; border: none;
+      border-radius: 4px; padding: 8px 16px;
+      cursor: pointer; font-size: 14px;
+    }
+    button:hover { background: #1558b0; }
+
+    .resultado {
+      margin-top: 12px; background: #f8f9fa;
+      border-left: 4px solid #1a73e8;
+      padding: 10px 14px; font-size: 13px;
+      white-space: pre-wrap; border-radius: 0 4px 4px 0;
+      min-height: 36px;
+    }
+
+    .error { border-left-color: #e53935; color: #e53935; }
+    .ok    { border-left-color: #43a047; }
+  </style>
+</head>
+<body>
+
+<header>🛒 Tienda Online — SOAP Web Service</header>
+
+<div class="container">
+
+  <!-- Listar productos -->
+  <div class="card">
+    <h2>📦 Listar todos los productos</h2>
+    <button onclick="listarProductos()">Consultar catálogo</button>
+    <div class="resultado" id="res-listar">—</div>
+  </div>
+
+  <!-- Consultar producto -->
+  <div class="card">
+    <h2>🔍 Consultar producto por ID</h2>
+    <div class="row">
+      <input type="number" id="id-producto" placeholder="ID" min="1" value="1">
+      <button onclick="consultarProducto()">Consultar</button>
+    </div>
+    <div class="resultado" id="res-consultar">—</div>
+  </div>
+
+  <!-- Realizar pedido -->
+  <div class="card">
+    <h2>🛍️ Realizar pedido</h2>
+    <div class="row">
+      <input type="number" id="pedido-producto" placeholder="ID producto" min="1" value="1">
+      <input type="number" id="pedido-cantidad" placeholder="Cantidad" min="1" value="1">
+      <button onclick="realizarPedido()">Comprar</button>
+    </div>
+    <div class="resultado" id="res-pedido">—</div>
+  </div>
+
+  <!-- Consultar pedido -->
+  <div class="card">
+    <h2>📋 Consultar estado de pedido</h2>
+    <div class="row">
+      <input type="number" id="id-pedido" placeholder="N° pedido" min="1" value="1">
+      <button onclick="consultarPedido()">Consultar</button>
+    </div>
+    <div class="resultado" id="res-consultar-pedido">—</div>
+  </div>
+
+</div>
+
+<script>
+  const PROXY = "http://localhost:8081/proxy/ventas";
+  const NS    = "http://soap/";
+
+  async function llamarSOAP(xmlBody, resId) {
+    const el = document.getElementById(resId);
+    el.textContent = "Consultando...";
+    el.className = "resultado";
+    try {
+      const resp = await fetch(PROXY, {
+        method: "POST",
+        headers: { "Content-Type": "text/xml; charset=utf-8" },
+        body: xmlBody
+      });
+      const text = await resp.text();
+      // Extraer el texto dentro de <return>
+      const match = text.match(/<return>([\s\S]*?)<\/return>/);
+      const valor = match ? match[1].trim() : text;
+      el.textContent = valor;
+      el.className = "resultado " + (valor.startsWith("ERROR") ? "error" : "ok");
+    } catch (e) {
+      el.textContent = "Error de conexión: " + e.message;
+      el.className = "resultado error";
+    }
+  }
+
+  function listarProductos() {
+    llamarSOAP(`
+      <soapenv:Envelope
+          xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+          xmlns:tns="${NS}">
+        <soapenv:Body><tns:listarProductos/></soapenv:Body>
+      </soapenv:Envelope>`, "res-listar");
+  }
+
+  function consultarProducto() {
+    const id = document.getElementById("id-producto").value;
+    llamarSOAP(`
+      <soapenv:Envelope
+          xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+          xmlns:tns="${NS}">
+        <soapenv:Body>
+          <tns:consultarProducto><arg0>${id}</arg0></tns:consultarProducto>
+        </soapenv:Body>
+      </soapenv:Envelope>`, "res-consultar");
+  }
+
+  function realizarPedido() {
+    const prod = document.getElementById("pedido-producto").value;
+    const cant = document.getElementById("pedido-cantidad").value;
+    llamarSOAP(`
+      <soapenv:Envelope
+          xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+          xmlns:tns="${NS}">
+        <soapenv:Body>
+          <tns:realizarPedido>
+            <arg0>${prod}</arg0>
+            <arg1>${cant}</arg1>
+          </tns:realizarPedido>
+        </soapenv:Body>
+      </soapenv:Envelope>`, "res-pedido");
+  }
+
+  function consultarPedido() {
+    const id = document.getElementById("id-pedido").value;
+    llamarSOAP(`
+      <soapenv:Envelope
+          xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+          xmlns:tns="${NS}">
+        <soapenv:Body>
+          <tns:consultarPedido><arg0>${id}</arg0></tns:consultarPedido>
+        </soapenv:Body>
+      </soapenv:Envelope>`, "res-consultar-pedido");
+  }
+</script>
+
+</body>
+</html>
