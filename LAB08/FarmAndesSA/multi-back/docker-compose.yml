@@ -1,0 +1,204 @@
+services:
+  # ========== BASE DE DATOS ==========
+  postgres-arequipa:
+    image: postgres:15-alpine
+    container_name: postgres-arequipa
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: inventario_arequipa
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_arequipa:/var/lib/postgresql/data
+      - ./init-sql:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d inventario_arequipa"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - almacenes-net
+
+  postgres-lima:
+    image: postgres:15-alpine
+    container_name: postgres-lima
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: inventario_lima
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_lima:/var/lib/postgresql/data
+      - ./init-sql:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d inventario_lima"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - almacenes-net
+
+  postgres-cusco:
+    image: postgres:15-alpine
+    container_name: postgres-cusco
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: inventario_cusco
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data_cusco:/var/lib/postgresql/data
+      - ./init-sql:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d inventario_cusco"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - almacenes-net
+
+  # ========== BACKENDS ==========
+  backend-arequipa:
+    build: .
+    container_name: backend-arequipa
+    environment:
+      CITY: arequipa
+      PORT: 3000
+      DB_HOST: postgres-arequipa
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: inventario_arequipa
+      PEER_AREQUIPA: http://backend-arequipa:3000
+      PEER_LIMA: http://backend-lima:3000
+      PEER_CUSCO: http://backend-cusco:3000
+      PREPARE_TIMEOUT: 5000
+      COMMIT_TIMEOUT: 5000
+    ports:
+      - "3001:3000"
+    depends_on:
+      postgres-arequipa:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    networks:
+      - almacenes-net
+
+  backend-lima:
+    build: .
+    container_name: backend-lima
+    environment:
+      CITY: lima
+      PORT: 3000
+      DB_HOST: postgres-lima
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: inventario_lima
+      PEER_AREQUIPA: http://backend-arequipa:3000
+      PEER_LIMA: http://backend-lima:3000
+      PEER_CUSCO: http://backend-cusco:3000
+      PREPARE_TIMEOUT: 5000
+      COMMIT_TIMEOUT: 5000
+    ports:
+      - "3002:3000"
+    depends_on:
+      postgres-lima:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    networks:
+      - almacenes-net
+
+  backend-cusco:
+    build: .
+    container_name: backend-cusco
+    environment:
+      CITY: cusco
+      PORT: 3000
+      DB_HOST: postgres-cusco
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: inventario_cusco
+      PEER_AREQUIPA: http://backend-arequipa:3000
+      PEER_LIMA: http://backend-lima:3000
+      PEER_CUSCO: http://backend-cusco:3000
+      PREPARE_TIMEOUT: 5000
+      COMMIT_TIMEOUT: 5000
+    ports:
+      - "3003:3000"
+    depends_on:
+      postgres-cusco:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    networks:
+      - almacenes-net
+
+volumes:
+  postgres_data_arequipa:
+  postgres_data_lima:
+  postgres_data_cusco:
+
+networks:
+  almacenes-net:
+    driver: bridge
+
+# services:
+#   # Base de datos
+#   postgres:
+#     image: postgres:15-alpine
+#     container_name: postgres_test
+#     restart: unless-stopped
+#     environment:
+#       POSTGRES_USER: admin
+#       POSTGRES_PASSWORD: admin123
+#       POSTGRES_DB: test_db
+#     ports:
+#       - "3333:5432"  # Solo para acceder desde tu local si necesitas
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#       - ./init-sql:/docker-entrypoint-initdb.d/
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U admin -d test_db"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#     networks:
+#       - app-network
+
+#   # Tu backend TypeScript
+#   backend:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: ts_backend
+#     restart: unless-stopped
+#     environment:
+#       # ⚠️ AQUÍ está la clave: usa el nombre del servicio, NO localhost
+#       DB_HOST: postgres  # ← El nombre del servicio de BD
+#       DB_PORT: 5432       # ← El puerto INTERNO del contenedor
+#       DB_USER: admin
+#       DB_PASSWORD: admin123
+#       DB_NAME: test_db
+#     ports:
+#       - "3000:3000"  # Para acceder a tu API desde local
+#     depends_on:
+#       postgres:
+#         condition: service_healthy
+#     volumes:
+#       # Opcional: para desarrollo con hot reload
+#       - ./src:/app/src
+#     networks:
+#       - app-network
+
+# volumes:
+#   postgres_data:
+
+# networks:
+#   app-network:
+#     driver: bridge

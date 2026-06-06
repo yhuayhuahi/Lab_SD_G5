@@ -1,0 +1,25 @@
+# Solo era para probar nada importante q ver
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: test_db
+    ports:
+      - "3333:5432"  # Expone PostgreSQL en tu localhost:3333
+    volumes:
+      # Persistencia de datos (opcional, quítalo si solo pruebas)
+      - postgres_data:/var/lib/postgresql/data
+      # Monta la carpeta con scripts SQL para inicializar la BD
+      - ./init-sql:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d test_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
