@@ -59,9 +59,13 @@ export async function transferirProducto(
   console.log(`   Producto: ${producto}, Cantidad: ${cantidad}`);
   
   const client = await pool.connect();
-  
+
   try {
-    // ============ FASE 1: PREPARE ============
+   // IMPORTANTE: iniciar transacción en el origen.
+   // Sin BEGIN, PostgreSQL hace autocommit y ROLLBACK no revierte el descuento.
+    await client.query('BEGIN');
+
+  // ============ FASE 1: PREPARE ============
     console.log(`📦 [${transactionId}] Fase 1: PREPARE`);
     
     // 1.1 Prepare en origen (descontar stock)

@@ -3,13 +3,15 @@
  */
 package org.example;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+
 import jakarta.xml.ws.Endpoint;
-import java.io.IOException;
-import java.net.InetSocketAddress;
 
 public class App {
   
@@ -27,7 +29,7 @@ public class App {
         context.getFilters().add(new Filter() {
             @Override
             public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
-                // Agregamos las cabeceras CORS obligatorias
+                // Agregamos las cabeceras CORS necesarias para permitir que clientes web (como navegadores) puedan consumir nuestro servicio SOAP sin problemas de seguridad relacionados con CORS, especialmente importante si el cliente está en un dominio diferente (como localhost:3000 para React, por ejemplo)
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
                 // Es vital incluir 'SOAPAction' ya que los clientes SOAP antiguos/estándar la envían
@@ -40,7 +42,7 @@ public class App {
                     return; 
                 }
 
-                // Si no es OPTIONS (es el POST real con el XML), dejamos que continúe hacia el motor de SOAP
+                // Si no es OPTIONS, dejamos que continúe hacia el motor de SOAP
                 chain.doFilter(exchange);
             }
 

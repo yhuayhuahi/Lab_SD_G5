@@ -47,7 +47,7 @@ public class VentasSOAP {
 
     @WebMethod
     public String realizarPedido(int productoId, int cantidad) {
-        String[] p = productos.get(productoId);
+        String[] p = productos.get(productoId); // obtener producto por id
         if (p == null)  return "ERROR: Producto no encontrado";
 
         int stock = Integer.parseInt(p[2]);
@@ -55,7 +55,7 @@ public class VentasSOAP {
         if (cantidad > stock) return "ERROR: Stock insuficiente (disponible: " + stock + ")";
 
         // Descontar stock y registrar pedido
-        p[2] = String.valueOf(stock - cantidad);
+        p[2] = String.valueOf(stock - cantidad); 
         double total = Double.parseDouble(p[1]) * cantidad;
         int pedidoId = contadorPedidos++;
         pedidos.put(pedidoId, new String[]{
