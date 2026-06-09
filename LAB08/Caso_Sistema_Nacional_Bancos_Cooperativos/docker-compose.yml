@@ -1,0 +1,50 @@
+services:
+  postgres_arequipa:
+    image: postgres:15
+    container_name: postgres_arequipa
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: almacen_arequipa
+    command: ["postgres", "-c", "max_prepared_transactions=10"]
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./scripts_sql/arequipa_init.sql:/docker-entrypoint-initdb.d/arequipa_init.sql:ro
+      - pgdata_arequipa:/var/lib/postgresql/data
+
+  postgres_cusco:
+    image: postgres:15
+    container_name: postgres_cusco
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: almacen_cusco
+    command: ["postgres", "-c", "max_prepared_transactions=10"]
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./scripts_sql/cusco_init.sql:/docker-entrypoint-initdb.d/cusco_init.sql:ro
+      - pgdata_cusco:/var/lib/postgresql/data
+
+  postgres_trujillo:
+    image: postgres:15
+    container_name: postgres_trujillo
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: almacen_trujillo
+    command: ["postgres", "-c", "max_prepared_transactions=10"]
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./scripts_sql/trujillo_init.sql:/docker-entrypoint-initdb.d/trujillo_init.sql:ro
+      - pgdata_trujillo:/var/lib/postgresql/data
+
+volumes:
+  pgdata_arequipa:
+  pgdata_cusco:
+  pgdata_trujillo:
