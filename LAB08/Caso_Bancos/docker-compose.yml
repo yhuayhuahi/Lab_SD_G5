@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres_arequipa:
+    image: postgres:15-alpine
+    container_name: postgres_arequipa
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: banco_arequipa
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./init-sql/01-arequipa.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata_arequipa:/var/lib/postgresql/data
+    # IMPORTANTE: Habilitar transacciones preparadas para 2PC
+    command: ["postgres", "-c", "max_prepared_transactions=10"]
+    networks:
+      - bancos_net
+
+  postgres_cusco:
+    image: postgres:15-alpine
+    container_name: postgres_cusco
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: banco_cusco
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./init-sql/02-cusco.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata_cusco:/var/lib/postgresql/data
+    command: ["postgres", "-c", "max_prepared_transactions=10"]
+    networks:
+      - bancos_net
+
+  postgres_trujillo:
+    image: postgres:15-alpine
+    container_name: postgres_trujillo
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: banco_trujillo
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./init-sql/03-trujillo.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata_trujillo:/var/lib/postgresql/data
+    command: ["postgres", "-c", "max_prepared_transactions=10"]
+    networks:
+      - bancos_net
+
+networks:
+  bancos_net:
+    driver: bridge
+
+volumes:
+  pgdata_arequipa:
+  pgdata_cusco:
+  pgdata_trujillo:

@@ -17,3 +17,14 @@ coverage/
 *.swo
 *.zip
 *.tar.gz
+# lab08 caso bancos
+venv/
+.venv/
+env/
+pycache/
+*.pyc
+.env
+# volumenes de base de datos local
+postgres_data_arequipa/
+postgres_data_cusco/
+postgres_data_trujillo/
