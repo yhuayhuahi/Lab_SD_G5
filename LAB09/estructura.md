@@ -141,24 +141,32 @@ logifresh/
 {
   "name": "logifresh-[servicio]",
   "version": "1.0.0",
-  "type": "module",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.6",
+    "@types/node": "25.6.0",
+    "@types/pg": "8.20.0",
+    "tsx": "4.21.0",
+    "typescript": "6.0.3"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "axios": "^1.6.0"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.20",
-    "@types/cors": "^2.8.14",
-    "@types/node": "^20.8.0",
-    "typescript": "^5.2.2",
-    "tsx": "^4.0.0"
+    "cors": "2.8.6",
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "pg": "8.21.0" //solo para el que usa postgress
   }
 }
 ```
@@ -218,7 +226,7 @@ DB_NAME=logifresh
 
 ---
 
-### `.dockerignore` (idéntico para todos)
+### `.dockerignore` 
 
 ```
 node_modules
@@ -257,28 +265,6 @@ Thumbs.db
 
 # Docker
 *.pid
-```
-
----
-
-## 🚀 Flujo de Trabajo para el Equipo
-
-### Día 1-3: Desarrollo individual
-
-```bash
-# Cada persona en su carpeta
-cd servicios/pedidos
-cp .env.example .env
-# Editar .env con sus puertos locales
-docker-compose -f docker-compose.dev.yml up --build
-```
-
-### Día 4: Integración
-
-```bash
-# En la raíz del proyecto
-cd logifresh/
-docker-compose up --build
 ```
 
 ---
