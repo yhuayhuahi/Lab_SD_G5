@@ -37,7 +37,7 @@ mi-servicio/
 
 ---
 
-## Guías por Microservicio
+## Guías por Microservicio (VER COMPLETO EN CONTRATO.MD)
 
 ### 1. Servicio de Pedidos (Orquestador)
 
