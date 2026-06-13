@@ -121,13 +121,14 @@ export class FacturaService {
     }
   }
 
+  // ✅ CORREGIDO: Obtener factura por ID (con items)
   async obtenerFacturaPorId(facturaId: string) {
     const client = await pool.connect();
 
     try {
-      // Obtener factura
+      // Obtener factura por factura_id (string)
       const facturaResult = await client.query(
-        `SELECT factura_id, pedido_id, cliente_id, cliente_nombre, cliente_ruc, cliente_direccion,
+        `SELECT id, factura_id, pedido_id, cliente_id, cliente_nombre, cliente_ruc, cliente_direccion,
                 subtotal, descuento, total, igv, fecha_emision, estado, promocion_aplicada
          FROM facturas WHERE factura_id = $1`,
         [facturaId]
@@ -139,7 +140,7 @@ export class FacturaService {
 
       const factura = facturaResult.rows[0];
 
-      // Obtener items
+      // ✅ CORREGIDO: Usar factura.id (numérico) para buscar items
       const itemsResult = await client.query(
         `SELECT producto_id, nombre_producto, cantidad, precio_unitario, descuento_aplicado
          FROM items_factura WHERE factura_id = $1`,
@@ -177,11 +178,12 @@ export class FacturaService {
     }
   }
 
+  // ✅ CORREGIDO: Obtener factura por pedidoId (con items)
   async obtenerFacturaPorPedido(pedidoId: string) {
     const client = await pool.connect();
 
     try {
-      // Obtener factura por pedido_id
+      // Obtener factura por pedido_id (string)
       const facturaResult = await client.query(
         `SELECT id, factura_id, pedido_id, cliente_id, cliente_nombre, cliente_ruc, cliente_direccion,
                 subtotal, descuento, total, igv, fecha_emision, estado, promocion_aplicada
@@ -195,7 +197,7 @@ export class FacturaService {
 
       const factura = facturaResult.rows[0];
 
-      // Obtener items
+      // ✅ CORREGIDO: Usar factura.id (numérico) para buscar items
       const itemsResult = await client.query(
         `SELECT producto_id, nombre_producto, cantidad, precio_unitario, descuento_aplicado
          FROM items_factura WHERE factura_id = $1`,

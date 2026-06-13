@@ -89,7 +89,7 @@ curl -X POST http://localhost:8083/api/facturas/generar \
 ```
 
 **Guarda el `facturaId` que te devuelva (ej: `FAC-1732127445123`)**
-"facturaId": "FAC-1781384993444"
+"facturaId": "FAC-1781385843223"
 ---
 
 ### 6. POST `/api/facturas/generar` (Factura duplicada - debe dar error 409)
@@ -128,12 +128,13 @@ curl -X POST http://localhost:8083/api/facturas/generar \
 "facturaId": "FAC-1781384993444"
 
 ```bash
-curl http://localhost:8083/api/facturas/FAC-1781384993444
+curl http://localhost:8083/api/facturas/FAC-1781385843223
 ```
 
 ---
-"pedidoId": "PED-20241120-001",
+
 ### 8. GET `/api/facturas/pedido/:pedidoId`
+"pedidoId": "PED-20241120-001"
 
 ```bash
 curl http://localhost:8083/api/facturas/pedido/PED-20241120-001
