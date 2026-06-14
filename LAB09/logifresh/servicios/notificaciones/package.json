@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "logifresh-notificaciones",
   "version": "1.0.0",
   "description": "Servicio de Notificaciones - LogiFresh S.A.",
@@ -7,9 +7,12 @@
     "dev": "tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "clean": "rmdir /s /q dist"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

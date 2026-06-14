@@ -1,0 +1,16 @@
+﻿services:
+  notificaciones:
+    build: .
+    ports:
+      - "8085:8085"
+    environment:
+      - PORT=8085
+      - NODE_ENV=development
+      - ENABLE_RANDOM_FAILURE=false
+      - RANDOM_FAILURE_RATE=0.15
+    networks:
+      - notificaciones-net
+
+networks:
+  notificaciones-net:
+    driver: bridge
