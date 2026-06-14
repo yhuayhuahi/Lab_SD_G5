@@ -1,0 +1,5 @@
+soap\ClienteSOAP.class
+soap\ProxyServidor.class
+soap\ConversorSOAP.class
+soap\Publicador.class
+soap\VentasSOAP.class

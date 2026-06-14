@@ -11,8 +11,9 @@ public class ClienteSOAP {
         String url = "http://localhost:8080/conversor";
 
         // Convertir 30°C a Fahrenheit
+        // envelope sirve para envolver el mensaje SOAP y definir los espacios de nombres
         String soapCtoF = """
-            <soapenv:Envelope
+            <soapenv:Envelope 
                 xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                 xmlns:tns="http://soap/">
               <soapenv:Body>
@@ -36,10 +37,10 @@ public class ClienteSOAP {
             </soapenv:Envelope>
             """;
 
-        HttpClient client = HttpClient.newHttpClient();
+        HttpClient client = HttpClient.newHttpClient(); // crea un cliente HTTP para enviar las solicitudes SOAP al servicio
 
         System.out.println("=== 30°C a Fahrenheit ===");
-        System.out.println(enviar(client, url, soapCtoF));
+        System.out.println(enviar(client, url, soapCtoF)); // identifica la url a usar y el mensaje SOAP a enviar
 
         System.out.println("=== 86°F a Celsius ===");
         System.out.println(enviar(client, url, soapFtoC));
@@ -47,14 +48,14 @@ public class ClienteSOAP {
 
     static String enviar(HttpClient client, String url, String soapBody) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
+            .uri(URI.create(url)) // define la URL del servicio SOAP
             .header("Content-Type", "text/xml; charset=utf-8")
-            .POST(HttpRequest.BodyPublishers.ofString(soapBody))
-            .build();
+            .POST(HttpRequest.BodyPublishers.ofString(soapBody)) // POST para enviar el mensaje SOAP en el cuerpo de la solicitud
+            .build(); // construye la solicitud HTTP
 
-        HttpResponse<String> response = client.send(
-            request, HttpResponse.BodyHandlers.ofString()
+        HttpResponse<String> response = client.send( // envía la solicitud y espera la respuesta
+            request, HttpResponse.BodyHandlers.ofString() // maneja la respuesta como una cadena de texto
         );
-        return response.body();
+        return response.body(); // devuelve el cuerpo de la respuesta, que contiene el resultado del servicio 
     }
 }

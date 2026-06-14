@@ -22,7 +22,7 @@ def obtener_cliente():
     # La URL del WSDL se obtiene agregando ?wsdl a la URL del servicio SOAP
     wsdl_url = "http://localhost:8080/calculadora?wsdl"
     
-    try:
+    try: # wsdl significa Web Services Description Language, es un formato XML que describe los servicios web disponibles, sus métodos, parámetros y tipos de datos.
         client = Client(wsdl=wsdl_url)
         print(f"✓ Conectado exitosamente al servidor SOAP en: {wsdl_url}\n")
         return client
@@ -39,13 +39,13 @@ def mostrar_operaciones_disponibles(client):
     Args:
         client: Cliente SOAP
     """
-    print("=" * 60)
+    print("=" * 60) # Imprime una línea de separación para mejorar la legibilidad
     print("OPERACIONES DISPONIBLES EN EL SERVICIO SOAP")
     print("=" * 60)
     
     # Mostrar servicios/puertos detectados en el WSDL (útil para depuración)
     try:
-        services = client.wsdl.services
+        services = client.wsdl.services # services contendra los servicios definidos en el WSDL, cada servicio puede tener uno o más puertos (endpoints) que representan diferentes formas de acceder al servicio.
         print("\nServicios WSDL detectados:")
         for svc_name, svc in services.items():
             print(f" - {svc_name}:")
