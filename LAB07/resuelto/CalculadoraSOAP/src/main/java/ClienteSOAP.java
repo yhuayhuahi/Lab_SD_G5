@@ -22,14 +22,14 @@ public class ClienteSOAP {
             } while (opcion != 0);
         }
     }
-
+    // establece la conexion accediendo al WDSL
     private static ICalculadoraSOAP conectarServicio() throws Exception {
         // create para crear un servicio SOAP y toURL para acceder
-        URL url = URI.create("http://localhost:8080/calculadora?wsdl").toURL();
+        URL url = URI.create("http://localhost:8080/calculadora?wsdl").toURL(); // usa toURL para convertir la URI a URL, que es lo que necesita Service.create() para acceder al WSDL del servicio SOAP publicado en esa dirección
         QName qname = new QName("http://servicio.soap/", "CalculadoraSOAPService");
 
         Service service = Service.create(url, qname); // crea el servicio
-        return service.getPort(ICalculadoraSOAP.class); // obtiene el puerto
+        return service.getPort(ICalculadoraSOAP.class); //  puerto es el representante del servicio en el lado cliente
     }
 
     private static void mostrarMenu() {
