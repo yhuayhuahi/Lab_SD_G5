@@ -1,0 +1,33 @@
+services:
+  pedidos:
+    build: .
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://mongo:27017/pedidos
+      - INVENTARIO_URL=http://inventario:8082
+      - FACTURACION_URL=http://facturacion:8083
+      - TRANSPORTE_URL=http://transporte:8084
+      - NOTIFICACIONES_URL=http://notificaciones:8085
+    depends_on:
+      - mongo
+    networks:
+      - pedidos-net
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - pedidos-net
+
+volumes:
+  mongo-data:
+
+networks:
+  pedidos-net:
+    driver: bridge
