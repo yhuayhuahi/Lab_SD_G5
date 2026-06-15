@@ -1,0 +1,50 @@
+services:
+  # BASE DE DATOS - PostgreSQL para Facturación
+  postgres-facturacion:
+    image: postgres:15-alpine
+    container_name: logifresh-postgres-facturacion
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: logifresh_facturacion
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_facturacion:/var/lib/postgresql/data
+      - ./scripts:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d logifresh_facturacion"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - facturacion-net
+
+  # BACKEND - Servicio de Facturación
+  backend-facturacion:
+    build: .
+    container_name: logifresh-backend-facturacion
+    environment:
+      PORT: 8083
+      DB_HOST: postgres-facturacion
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: secret
+      DB_NAME: logifresh_facturacion
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres-facturacion:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    networks:
+      - facturacion-net
+
+networks:
+  facturacion-net:
+    driver: bridge
+
+volumes:
+  postgres_data_facturacion:
+    driver: local
