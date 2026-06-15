@@ -121,7 +121,7 @@ export class FacturaService {
     }
   }
 
-  // ✅ CORREGIDO: Obtener factura por ID (con items)
+  // Obtener factura por ID 
   async obtenerFacturaPorId(facturaId: string) {
     const client = await pool.connect();
 
@@ -140,7 +140,7 @@ export class FacturaService {
 
       const factura = facturaResult.rows[0];
 
-      // ✅ CORREGIDO: Usar factura.id (numérico) para buscar items
+      //Usar factura.id (numérico) para buscar items
       const itemsResult = await client.query(
         `SELECT producto_id, nombre_producto, cantidad, precio_unitario, descuento_aplicado
          FROM items_factura WHERE factura_id = $1`,
@@ -178,7 +178,7 @@ export class FacturaService {
     }
   }
 
-  // ✅ CORREGIDO: Obtener factura por pedidoId (con items)
+  // Obtener factura por pedidoId 
   async obtenerFacturaPorPedido(pedidoId: string) {
     const client = await pool.connect();
 
