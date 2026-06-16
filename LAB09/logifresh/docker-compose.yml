@@ -157,3 +157,18 @@ services:
       - RANDOM_FAILURE_RATE=0.15
     networks:
       - logifresh-network
+
+  # 6. Frontend Dashboard (nginx sirviendo SPA)
+  frontend:
+    build: ./frontend
+    container_name: logifresh-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - pedidos
+      - inventario
+      - facturacion
+      - transporte
+      - notificaciones
+    networks:
+      - logifresh-network

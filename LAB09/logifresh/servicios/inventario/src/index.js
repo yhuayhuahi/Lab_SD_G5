@@ -1,14 +1,16 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const { connectRedis } = require('./config/redis');
 const { inicializarStock } = require('./services/inventarioService');
 const inventarioRouter = require('./routes/inventario');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 8082;
 
 // Middlewares globales
+app.use(cors());
 app.use(express.json());
 
 // Health check

@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LogiFresh — Panel de Control</title>
+  <style>
+    :root {
+      --blue-50:  #eff6ff;
+      --blue-100: #dbeafe;
+      --blue-500: #3b82f6;
+      --blue-600: #2563eb;
+      --blue-700: #1d4ed8;
+      --green-50:  #f0fdf4;
+      --green-100: #dcfce7;
+      --green-500: #22c55e;
+      --green-600: #16a34a;
+      --green-700: #15803d;
+      --teal-500:  #14b8a6;
+      --teal-600:  #0d9488;
+      --amber-50:  #fffbeb;
+      --amber-100: #fef3c7;
+      --amber-500: #f59e0b;
+      --amber-600: #d97706;
+      --red-50:   #fef2f2;
+      --red-100:  #fee2e2;
+      --red-500:  #ef4444;
+      --red-600:  #dc2626;
+      --slate-50:  #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --white: #ffffff;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--slate-100);
+      color: var(--slate-800);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      background: var(--white);
+      border-bottom: 1px solid var(--slate-200);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--blue-700);
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--blue-600), var(--teal-500));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 20px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 2px;
+      list-style: none;
+      margin-left: 12px;
+      flex: 1;
+      overflow-x: auto;
+    }
+
+    .nav-tabs button {
+      background: none;
+      border: none;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--slate-600);
+      white-space: nowrap;
+      transition: background .15s, color .15s;
+    }
+
+    .nav-tabs button:hover { background: var(--slate-100); color: var(--slate-800); }
+    .nav-tabs button.active { background: var(--blue-50); color: var(--blue-700); }
+
+    .status-bar {
+      display: flex; gap: 8px; flex-shrink: 0;
+    }
+
+    .status-dot {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 600;
+      color: var(--slate-500);
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--slate-300);
+      transition: background .3s;
+    }
+
+    .dot.up { background: var(--green-500); }
+    .dot.down { background: var(--red-500); }
+
+    /* ── LAYOUT ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      background: var(--white);
+      border-right: 1px solid var(--slate-200);
+      padding: 20px 12px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--slate-400);
+      padding: 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--slate-600);
+      transition: background .15s, color .15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .sidebar-link:hover { background: var(--slate-100); color: var(--slate-800); }
+    .sidebar-link.active { background: var(--blue-50); color: var(--blue-700); font-weight: 600; }
+    .sidebar-link .icon { font-size: 16px; width: 20px; text-align: center; }
+
+    /* ── MAIN ── */
+    .main {
+      padding: 28px;
+      overflow-y: auto;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: var(--slate-500);
+      margin-top: 2px;
+    }
+
+    /* ── CARDS GRID ── */
+    .cards {
+      display: grid;
+      gap: 16px;
+    }
+
+    .cards-4 { grid-template-columns: repeat(4, 1fr); }
+    .cards-3 { grid-template-columns: repeat(3, 1fr); }
+    .cards-2 { grid-template-columns: repeat(2, 1fr); }
+
+    @media (max-width: 1100px) { .cards-4 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px)  { .cards-4, .cards-3, .cards-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--slate-500);
+      margin-bottom: 8px;
+    }
+
+    .card-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--slate-900);
+      line-height: 1;
+    }
+
+    .card-value.green { color: var(--green-600); }
+    .card-value.red   { color: var(--red-600); }
+    .card-value.amber { color: var(--amber-600); }
+    .card-value.blue  { color: var(--blue-600); }
+
+    .card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+
+    .badge-green { background: var(--green-100); color: var(--green-700); }
+    .badge-red   { background: var(--red-100);   color: var(--red-600); }
+    .badge-amber { background: var(--amber-100); color: var(--amber-600); }
+    .badge-blue  { background: var(--blue-100);  color: var(--blue-700); }
+    .badge-slate { background: var(--slate-100); color: var(--slate-600); }
+
+    /* ── SERVICE STATUS CARDS ── */
+    .svc-card {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .svc-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .svc-info { flex: 1; min-width: 0; }
+
+    .svc-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--slate-800);
+    }
+
+    .svc-url {
+      font-size: 11px;
+      color: var(--slate-400);
+      font-family: monospace;
+    }
+
+    .svc-status {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .svc-status.up   { background: var(--green-100); color: var(--green-700); }
+    .svc-status.down { background: var(--red-100);   color: var(--red-600); }
+    .svc-status.checking { background: var(--slate-100); color: var(--slate-500); }
+
+    /* ── FORM ── */
+    .form-card {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .form-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-700);
+      border-bottom: 1px solid var(--slate-200);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+      margin-top: 20px;
+    }
+
+    .form-section-title:first-of-type { margin-top: 0; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .form-row.single { grid-template-columns: 1fr; }
+    .form-row.three  { grid-template-columns: 1fr 1fr 1fr; }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--slate-700);
+      margin-bottom: 5px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      border: 1px solid var(--slate-300);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-size: 13px;
+      color: var(--slate-800);
+      background: var(--white);
+      transition: border-color .15s, box-shadow .15s;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--blue-500);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+    }
+
+    /* ── ITEMS TABLE ── */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+
+    .items-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--slate-500);
+      padding: 8px 10px;
+      background: var(--slate-50);
+      border-bottom: 1px solid var(--slate-200);
+    }
+
+    .items-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--slate-100);
+      font-size: 13px;
+    }
+
+    .items-table td input {
+      border: 1px solid var(--slate-200);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .items-table td input:focus {
+      outline: none;
+      border-color: var(--blue-400);
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background .15s, box-shadow .15s, transform .1s;
+    }
+
+    .btn:active { transform: scale(.98); }
+
+    .btn-primary {
+      background: var(--blue-600);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--blue-700); }
+
+    .btn-success {
+      background: var(--green-600);
+      color: #fff;
+    }
+    .btn-success:hover { background: var(--green-700); }
+
+    .btn-outline {
+      background: var(--white);
+      color: var(--slate-700);
+      border: 1px solid var(--slate-300);
+    }
+    .btn-outline:hover { background: var(--slate-50); }
+
+    .btn-danger {
+      background: var(--red-500);
+      color: #fff;
+    }
+    .btn-danger:hover { background: var(--red-600); }
+
+    .btn-ghost {
+      background: none;
+      color: var(--slate-600);
+      padding: 6px 10px;
+    }
+    .btn-ghost:hover { background: var(--slate-100); }
+
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table.data {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table.data th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--slate-500);
+      padding: 10px 14px;
+      background: var(--slate-50);
+      border-bottom: 2px solid var(--slate-200);
+      white-space: nowrap;
+    }
+
+    table.data td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--slate-100);
+      font-size: 13px;
+      color: var(--slate-700);
+    }
+
+    table.data tr:hover td { background: var(--blue-50); }
+
+    table.data .mono {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      color: var(--slate-600);
+    }
+
+    /* ── BADGE PILLS ── */
+    .pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .pill-green { background: var(--green-100); color: var(--green-700); }
+    .pill-red   { background: var(--red-100);   color: var(--red-600); }
+    .pill-amber { background: var(--amber-100); color: var(--amber-600); }
+    .pill-blue  { background: var(--blue-100);  color: var(--blue-700); }
+    .pill-slate { background: var(--slate-100); color: var(--slate-600); }
+    .pill-teal  { background: #ccfbf1;          color: #0f766e; }
+
+    /* ── RESPONSE BOX ── */
+    .response-box {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: var(--radius);
+      padding: 16px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      min-height: 120px;
+      max-height: 400px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* ── INVENTORY GRID ── */
+    .stock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .stock-item {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .stock-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-700);
+      margin-bottom: 4px;
+    }
+
+    .stock-id {
+      font-size: 10px;
+      font-family: monospace;
+      color: var(--slate-400);
+      margin-bottom: 12px;
+    }
+
+    .stock-bar-wrap {
+      height: 6px;
+      background: var(--slate-200);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .stock-bar {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--green-500);
+      transition: width .4s;
+    }
+
+    .stock-bar.low  { background: var(--amber-500); }
+    .stock-bar.empty { background: var(--red-500); }
+
+    .stock-qty {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+
+    .stock-label {
+      font-size: 11px;
+      color: var(--slate-400);
+    }
+
+    /* ── UTILS ── */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-8  { gap: 8px; }
+    .gap-12 { gap: 12px; }
+    .gap-16 { gap: 16px; }
+    .mt-8   { margin-top: 8px; }
+    .mt-12  { margin-top: 12px; }
+    .mt-16  { margin-top: 16px; }
+    .mt-24  { margin-top: 24px; }
+    .mb-8   { margin-bottom: 8px; }
+    .mb-16  { margin-bottom: 16px; }
+    .text-sm   { font-size: 12px; }
+    .text-muted { color: var(--slate-400); }
+    .font-mono  { font-family: monospace; }
+    .w-full { width: 100%; }
+
+    /* ── TOAST ── */
+    .toast-wrap {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--slate-900);
+      color: var(--white);
+      padding: 12px 18px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      max-width: 340px;
+      pointer-events: all;
+      animation: slideIn .2s ease;
+    }
+
+    .toast.success { border-left: 3px solid var(--green-500); }
+    .toast.error   { border-left: 3px solid var(--red-500); }
+    .toast.info    { border-left: 3px solid var(--blue-500); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--slate-400);
+    }
+
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── SPINNER ── */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--slate-200);
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a class="brand" href="#">
+    <div class="brand-icon">❄️</div>
+    LogiFresh
+  </a>
+
+  <div class="status-bar" id="globalStatus">
+    <span class="status-dot"><span class="dot" id="dot-pedidos"></span> Pedidos</span>
+    <span class="status-dot"><span class="dot" id="dot-inventario"></span> Inventario</span>
+    <span class="status-dot"><span class="dot" id="dot-facturacion"></span> Facturación</span>
+    <span class="status-dot"><span class="dot" id="dot-transporte"></span> Transporte</span>
+    <span class="status-dot"><span class="dot" id="dot-notificaciones"></span> Notif.</span>
+  </div>
+</nav>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Principal</div>
+      <button class="sidebar-link active" data-page="dashboard">
+        <span class="icon">📊</span> Dashboard
+      </button>
+      <button class="sidebar-link" data-page="nuevo-pedido">
+        <span class="icon">➕</span> Nuevo Pedido
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Servicios</div>
+      <button class="sidebar-link" data-page="pedidos">
+        <span class="icon">🛒</span> Pedidos
+      </button>
+      <button class="sidebar-link" data-page="inventario">
+        <span class="icon">📦</span> Inventario
+      </button>
+      <button class="sidebar-link" data-page="facturacion">
+        <span class="icon">🧾</span> Facturación
+      </button>
+      <button class="sidebar-link" data-page="transporte">
+        <span class="icon">🚚</span> Transporte
+      </button>
+      <button class="sidebar-link" data-page="notificaciones">
+        <span class="icon">📧</span> Notificaciones
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Pruebas</div>
+      <button class="sidebar-link" data-page="pruebas">
+        <span class="icon">🔧</span> Pruebas / Simulación
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-sub">Vista general del sistema LogiFresh S.A.</p>
+      </div>
+
+      <!-- Métricas rápidas -->
+      <div class="cards cards-4" id="dashMetrics">
+        <div class="card">
+          <div class="card-title">Pedidos hoy</div>
+          <div class="card-value blue" id="metricPedidos">—</div>
+          <span class="card-badge badge-blue" id="metricPedidosBadge">cargando...</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Servicios activos</div>
+          <div class="card-value green" id="metricServicios">—</div>
+          <span class="card-badge badge-green" id="metricServiciosBadge">de 5 servicios</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Camiones disponibles</div>
+          <div class="card-value amber" id="metricCamiones">—</div>
+          <span class="card-badge badge-amber" id="metricCamionesBadge">cargando...</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Notificaciones</div>
+          <div class="card-value" id="metricNotif">—</div>
+          <span class="card-badge badge-slate" id="metricNotifBadge">historial</span>
+        </div>
+      </div>
+
+      <!-- Estado de servicios -->
+      <div class="mt-24">
+        <div class="flex items-center justify-between mb-16">
+          <h2 style="font-size:16px;font-weight:700;color:var(--slate-800)">Estado de Servicios</h2>
+          <button class="btn btn-outline btn-sm" onclick="checkAllServices()">↻ Actualizar</button>
+        </div>
+        <div class="cards cards-3" id="svcCards">
+          <!-- Se genera por JS -->
+        </div>
+      </div>
+
+      <!-- Últimos pedidos -->
+      <div class="mt-24">
+        <div class="flex items-center justify-between mb-16">
+          <h2 style="font-size:16px;font-weight:700;color:var(--slate-800)">Últimos pedidos</h2>
+          <button class="btn btn-outline btn-sm" onclick="cargarPedidos()">↻ Actualizar</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap" id="tablaPedidosDash">
+            <div class="empty-state"><div class="icon">📋</div><p>Cargando pedidos...</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ NUEVO PEDIDO ═══════════════════ -->
+    <div class="page" id="page-nuevo-pedido">
+      <div class="page-header">
+        <h1 class="page-title">Nuevo Pedido</h1>
+        <p class="page-sub">Registrar un pedido nuevo en LogiFresh</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start;">
+        <div class="form-card">
+          <div class="form-section-title">Datos del cliente</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cliente ID *</label>
+              <input type="text" id="f-clienteId" placeholder="CLI-001" value="CLI-001" />
+            </div>
+            <div class="form-group">
+              <label>Nombre *</label>
+              <input type="text" id="f-clienteNombre" placeholder="Supermercado Los Andes" value="Supermercado Los Andes" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email *</label>
+              <input type="email" id="f-clienteEmail" placeholder="ventas@supermercado.com" value="ventas@supermercadoandes.com" />
+            </div>
+            <div class="form-group">
+              <label>RUC</label>
+              <input type="text" id="f-clienteRuc" placeholder="20512345678" value="20512345678" />
+            </div>
+          </div>
+          <div class="form-row single">
+            <div class="form-group">
+              <label>Dirección</label>
+              <input type="text" id="f-clienteDireccion" placeholder="Av. Primavera 123, San Isidro" value="Av. Primavera 123, San Isidro" />
+            </div>
+          </div>
+
+          <div class="form-section-title">Productos</div>
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Producto ID</th>
+                <th>Nombre</th>
+                <th>Cant.</th>
+                <th>Precio S/</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody">
+              <tr data-item="0">
+                <td><input type="text" class="item-productoId" value="PROD-YOGURT" /></td>
+                <td><input type="text" class="item-nombre" value="Yogurt Natural Laive" /></td>
+                <td><input type="number" class="item-cantidad" value="4" min="1" style="width:60px" /></td>
+                <td><input type="number" class="item-precio" value="3.50" min="0" step="0.01" style="width:70px" /></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="eliminarItem(this)">✕</button></td>
+              </tr>
+              <tr data-item="1">
+                <td><input type="text" class="item-productoId" value="PROD-LECHE" /></td>
+                <td><input type="text" class="item-nombre" value="Leche Gloria Entera" /></td>
+                <td><input type="number" class="item-cantidad" value="2" min="1" style="width:60px" /></td>
+                <td><input type="number" class="item-precio" value="5.20" min="0" step="0.01" style="width:70px" /></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="eliminarItem(this)">✕</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <button class="btn btn-outline btn-sm" onclick="agregarItem()">+ Agregar producto</button>
+
+          <div class="form-section-title">Promoción y notas</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Promoción</label>
+              <select id="f-promocion">
+                <option value="">Sin promoción</option>
+                <option value="PROMO-2X1" selected>PROMO-2X1 (Lleva 2, paga 1)</option>
+                <option value="PROMO-10OFF">PROMO-10OFF (10% si total &gt; S/100)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Notas</label>
+              <input type="text" id="f-notas" placeholder="Entregar en horario 8am-12pm" />
+            </div>
+          </div>
+
+          <div class="mt-16 flex gap-12">
+            <button class="btn btn-primary" onclick="crearPedido()" id="btnCrear">
+              ✓ Confirmar pedido
+            </button>
+            <button class="btn btn-outline" onclick="limpiarFormulario()">Limpiar</button>
+          </div>
+        </div>
+
+        <!-- Respuesta -->
+        <div>
+          <div class="card" style="padding:16px">
+            <div class="flex items-center justify-between mb-8">
+              <span style="font-size:13px;font-weight:600;color:var(--slate-700)">Respuesta del servidor</span>
+              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('respuestaPedido').textContent='Listo.'">✕</button>
+            </div>
+            <pre class="response-box" id="respuestaPedido">Completa el formulario y presiona "Confirmar pedido".</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ PEDIDOS ═══════════════════ -->
+    <div class="page" id="page-pedidos">
+      <div class="page-header flex items-center justify-between">
+        <div>
+          <h1 class="page-title">Pedidos</h1>
+          <p class="page-sub">Consultar y gestionar pedidos</p>
+        </div>
+        <div class="flex gap-8">
+          <input type="text" id="buscarPedidoId" placeholder="PED-20241120-001" style="padding:8px 12px;border:1px solid var(--slate-300);border-radius:8px;font-size:13px;width:200px" />
+          <button class="btn btn-outline btn-sm" onclick="buscarPedido()">Buscar</button>
+          <button class="btn btn-outline btn-sm" onclick="cargarPedidos()">↻ Todos</button>
+        </div>
+      </div>
+
+      <div class="card mt-16">
+        <div class="table-wrap" id="tablaPedidos">
+          <div class="empty-state"><div class="icon">🛒</div><p>Cargando pedidos...</p></div>
+        </div>
+      </div>
+
+      <!-- Detalle pedido -->
+      <div id="detallePedidoWrap" style="display:none" class="mt-16">
+        <div class="card">
+          <div class="flex items-center justify-between mb-16">
+            <h2 style="font-size:15px;font-weight:700">Detalle del pedido</h2>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('detallePedidoWrap').style.display='none'">✕ Cerrar</button>
+          </div>
+          <pre class="response-box" id="detallePedidoBox" style="min-height:200px"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ INVENTARIO ═══════════════════ -->
+    <div class="page" id="page-inventario">
+      <div class="page-header flex items-center justify-between">
+        <div>
+          <h1 class="page-title">Inventario</h1>
+          <p class="page-sub">Stock de productos refrigerados</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="cargarInventario()">↻ Actualizar</button>
+      </div>
+
+      <div class="stock-grid mt-16" id="inventarioGrid">
+        <div class="empty-state" style="grid-column:1/-1"><div class="icon">📦</div><p>Cargando inventario...</p></div>
+      </div>
+
+      <!-- Actualizar stock -->
+      <div class="form-card mt-24">
+        <div class="form-section-title">Actualizar stock manualmente</div>
+        <div class="form-row three">
+          <div class="form-group">
+            <label>Producto ID</label>
+            <select id="inv-productoId">
+              <option value="PROD-YOGURT">PROD-YOGURT</option>
+              <option value="PROD-LECHE">PROD-LECHE</option>
+              <option value="PROD-QUELLAVES">PROD-QUELLAVES</option>
+              <option value="PROD-MANTECA">PROD-MANTECA</option>
+              <option value="PROD-POLLO">PROD-POLLO</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Operación</label>
+            <select id="inv-operacion">
+              <option value="INCREMENTAR">INCREMENTAR</option>
+              <option value="DECREMENTAR">DECREMENTAR</option>
+              <option value="SET">SET (establecer)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Cantidad</label>
+            <input type="number" id="inv-cantidad" value="10" min="1" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="actualizarStock()">Actualizar stock</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ FACTURACIÓN ═══════════════════ -->
+    <div class="page" id="page-facturacion">
+      <div class="page-header flex items-center justify-between">
+        <div>
+          <h1 class="page-title">Facturación</h1>
+          <p class="page-sub">Consultar facturas generadas</p>
+        </div>
+      </div>
+
+      <!-- Calcular promoción -->
+      <div class="form-card mb-16">
+        <div class="form-section-title">Calcular totales con promoción</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Promoción</label>
+            <select id="calc-promo">
+              <option value="">Sin promoción</option>
+              <option value="PROMO-2X1">PROMO-2X1</option>
+              <option value="PROMO-10OFF">PROMO-10OFF</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Items (JSON)</label>
+            <input type="text" id="calc-items" value='[{"productoId":"PROD-YOGURT","cantidad":4,"precioUnitario":3.50},{"productoId":"PROD-LECHE","cantidad":2,"precioUnitario":5.20}]' />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="calcularPromocion()">Calcular</button>
+        <pre class="response-box mt-12" id="calcBox" style="min-height:80px">Ingresa datos y presiona Calcular.</pre>
+      </div>
+
+      <!-- Buscar factura -->
+      <div class="card">
+        <div class="flex items-center gap-8 mb-16">
+          <input type="text" id="buscarFacturaId" placeholder="FAC-1732127445123 o PED-xxx" style="padding:8px 12px;border:1px solid var(--slate-300);border-radius:8px;font-size:13px;flex:1" />
+          <button class="btn btn-outline btn-sm" onclick="buscarFactura('id')">Por Factura ID</button>
+          <button class="btn btn-outline btn-sm" onclick="buscarFactura('pedido')">Por Pedido ID</button>
+        </div>
+        <pre class="response-box" id="facturaBox" style="min-height:100px">Ingresa un ID para buscar.</pre>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ TRANSPORTE ═══════════════════ -->
+    <div class="page" id="page-transporte">
+      <div class="page-header flex items-center justify-between">
+        <div>
+          <h1 class="page-title">Transporte</h1>
+          <p class="page-sub">Gestión de camiones y envíos</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="cargarCamiones()">↻ Actualizar</button>
+      </div>
+
+      <!-- Camiones -->
+      <div class="card mb-16" id="camionesWrap">
+        <div class="empty-state"><div class="icon">🚚</div><p>Cargando camiones...</p></div>
+      </div>
+
+      <!-- Consultar estado envío -->
+      <div class="form-card">
+        <div class="form-section-title">Consultar / actualizar envío</div>
+        <div class="form-row three">
+          <div class="form-group">
+            <label>Pedido ID</label>
+            <input type="text" id="trans-pedidoId" placeholder="PED-20241120-001" />
+          </div>
+          <div class="form-group">
+            <label>Nuevo estado</label>
+            <select id="trans-estado">
+              <option value="EN_RUTA">EN_RUTA</option>
+              <option value="ENTREGADO">ENTREGADO</option>
+              <option value="CANCELADO">CANCELADO</option>
+            </select>
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end;gap:8px">
+            <button class="btn btn-outline btn-sm" onclick="consultarTransporte()">Consultar</button>
+            <button class="btn btn-primary btn-sm" onclick="actualizarTransporte()">Actualizar</button>
+          </div>
+        </div>
+        <pre class="response-box mt-12" id="transporteBox" style="min-height:100px">Ingresa un Pedido ID para consultar.</pre>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ NOTIFICACIONES ═══════════════════ -->
+    <div class="page" id="page-notificaciones">
+      <div class="page-header flex items-center justify-between">
+        <div>
+          <h1 class="page-title">Notificaciones</h1>
+          <p class="page-sub">Historial de correos enviados</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="cargarHistorialNotif()">↻ Actualizar</button>
+      </div>
+
+      <!-- Enviar notif manual -->
+      <div class="form-card mb-16">
+        <div class="form-section-title">Enviar notificación manual</div>
+        <div class="form-row three">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="notif-email" value="cliente@supermercado.com" />
+          </div>
+          <div class="form-group">
+            <label>Asunto</label>
+            <input type="text" id="notif-asunto" value="Confirmación de Pedido - LogiFresh" />
+          </div>
+          <div class="form-group">
+            <label>Mensaje</label>
+            <input type="text" id="notif-mensaje" value="Su pedido ha sido confirmado." />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="enviarNotificacion()">Enviar</button>
+        <pre class="response-box mt-12" id="notifBox" style="min-height:60px"></pre>
+      </div>
+
+      <!-- Historial -->
+      <div class="card">
+        <div class="table-wrap" id="historialNotif">
+          <div class="empty-state"><div class="icon">📧</div><p>Cargando historial...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ PRUEBAS ═══════════════════ -->
+    <div class="page" id="page-pruebas">
+      <div class="page-header">
+        <h1 class="page-title">Pruebas / Simulación</h1>
+        <p class="page-sub">Simula escenarios de fallo del caso empresarial LogiFresh</p>
+      </div>
+
+      <div class="cards cards-2">
+        <div class="card">
+          <div class="card-title">🐢 Pedido lento (&gt;9s)</div>
+          <p class="text-sm text-muted mb-16">Envía un pedido al endpoint lento para simular lentitud &gt;8 segundos.</p>
+          <button class="btn btn-outline btn-sm" onclick="simularLento()">Simular pedido lento</button>
+          <pre class="response-box mt-12" id="boxLento" style="min-height:80px">Listo.</pre>
+        </div>
+
+        <div class="card">
+          <div class="card-title">❌ Fallo notificaciones</div>
+          <p class="text-sm text-muted mb-16">Fuerza un fallo en el servicio de notificaciones.</p>
+          <button class="btn btn-outline btn-sm" onclick="simularFalloNotif()">Simular fallo</button>
+          <pre class="response-box mt-12" id="boxFalloNotif" style="min-height:80px">Listo.</pre>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📦 Stock insuficiente</div>
+          <p class="text-sm text-muted mb-16">Pedido con PROD-QUELLAVES (stock = 0) para simular stock insuficiente.</p>
+          <button class="btn btn-outline btn-sm" onclick="simularStockInsuficiente()">Simular</button>
+          <pre class="response-box mt-12" id="boxStock" style="min-height:80px">Listo.</pre>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📩 Notificación lenta (5s)</div>
+          <p class="text-sm text-muted mb-16">Envía al endpoint de notificación lenta.</p>
+          <button class="btn btn-outline btn-sm" onclick="simularNotifLenta()">Simular</button>
+          <pre class="response-box mt-12" id="boxNotifLenta" style="min-height:80px">Listo.</pre>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CONFIGURACIÓN DE ENDPOINTS
+// ══════════════════════════════════════════════════════
+const API = {
+  pedidos:       'http://localhost:8081',
+  inventario:    'http://localhost:8082',
+  facturacion:   'http://localhost:8083',
+  transporte:    'http://localhost:8084',
+  notificaciones:'http://localhost:8085',
+};
+
+const SERVICIOS = [
+  { key: 'pedidos',        nombre: 'Pedidos',        icon: '🛒', color: '#3b82f6', bg: '#eff6ff' },
+  { key: 'inventario',     nombre: 'Inventario',     icon: '📦', color: '#22c55e', bg: '#f0fdf4' },
+  { key: 'facturacion',    nombre: 'Facturación',    icon: '🧾', color: '#f59e0b', bg: '#fffbeb' },
+  { key: 'transporte',     nombre: 'Transporte',     icon: '🚚', color: '#14b8a6', bg: '#f0fdfa' },
+  { key: 'notificaciones', nombre: 'Notificaciones', icon: '📧', color: '#8b5cf6', bg: '#f5f3ff' },
+];
+
+// ══════════════════════════════════════════════════════
+//  ROUTER (SPA)
+// ══════════════════════════════════════════════════════
+const sideLinks = document.querySelectorAll('.sidebar-link');
+
+sideLinks.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const page = btn.dataset.page;
+    navigateTo(page);
+  });
+});
+
+function navigateTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+
+  const link = document.querySelector(`.sidebar-link[data-page="${pageId}"]`);
+  if (link) link.classList.add('active');
+
+  // Auto-load data for each section
+  if (pageId === 'dashboard')      { cargarPedidos(); }
+  if (pageId === 'pedidos')        { cargarPedidos(); }
+  if (pageId === 'inventario')     { cargarInventario(); }
+  if (pageId === 'transporte')     { cargarCamiones(); }
+  if (pageId === 'notificaciones') { cargarHistorialNotif(); }
+}
+
+// ══════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════
+async function api(method, url, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body) opts.body = JSON.stringify(body);
+
+  const res = await fetch(url, opts);
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = text; }
+  return { status: res.status, ok: res.ok, data };
+}
+
+function toast(msg, type = 'info') {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function prettyJson(data) {
+  return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+}
+
+function pillEstado(estado) {
+  const map = {
+    CONFIRMADO: 'pill-green', PENDIENTE: 'pill-amber', CANCELADO: 'pill-red',
+    ENTREGADO:  'pill-blue',  ENVIADO: 'pill-teal',
+    ASIGNADO:   'pill-blue',  EN_RUTA: 'pill-teal',
+    ENVIADO_NOTIF: 'pill-green', FALLIDO: 'pill-red',
+  };
+  return `<span class="pill ${map[estado] || 'pill-slate'}">${estado}</span>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  HEALTH / STATUS
+// ══════════════════════════════════════════════════════
+async function checkService(svc) {
+  try {
+    const res = await fetch(`${API[svc.key]}/health`, { signal: AbortSignal.timeout(3000) });
+    return res.ok;
+  } catch { return false; }
+}
+
+async function checkAllServices() {
+  const results = await Promise.allSettled(SERVICIOS.map(s => checkService(s)));
+
+  // Update dots in topnav
+  SERVICIOS.forEach((svc, i) => {
+    const up = results[i].status === 'fulfilled' && results[i].value;
+    const dot = document.getElementById(`dot-${svc.key}`);
+    if (dot) { dot.className = `dot ${up ? 'up' : 'down'}`; }
+  });
+
+  // Render service cards
+  const svcCards = document.getElementById('svcCards');
+  if (!svcCards) return;
+
+  let upCount = 0;
+  svcCards.innerHTML = SERVICIOS.map((svc, i) => {
+    const up = results[i].status === 'fulfilled' && results[i].value;
+    if (up) upCount++;
+    return `
+      <div class="svc-card">
+        <div class="svc-icon" style="background:${svc.bg};color:${svc.color}">${svc.icon}</div>
+        <div class="svc-info">
+          <div class="svc-name">${svc.nombre}</div>
+          <div class="svc-url">localhost:${getPort(svc.key)}</div>
+        </div>
+        <span class="svc-status ${up ? 'up' : 'down'}">${up ? '● En línea' : '● Caído'}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Update metric
+  const ms = document.getElementById('metricServicios');
+  if (ms) {
+    ms.textContent = upCount;
+    ms.className = `card-value ${upCount === 5 ? 'green' : upCount > 2 ? 'amber' : 'red'}`;
+  }
+}
+
+function getPort(key) {
+  return { pedidos: 8081, inventario: 8082, facturacion: 8083, transporte: 8084, notificaciones: 8085 }[key];
+}
+
+// ══════════════════════════════════════════════════════
+//  PEDIDOS
+// ══════════════════════════════════════════════════════
+let pedidosCache = [];
+
+async function cargarPedidos() {
+  // The service doesn't have a list endpoint by spec, use recent IDs heuristic
+  const tablas = ['tablaPedidosDash', 'tablaPedidos'].map(id => document.getElementById(id)).filter(Boolean);
+
+  tablas.forEach(t => {
+    t.innerHTML = `<div class="empty-state"><div class="icon">🛒</div><p>Cargando...</p></div>`;
+  });
+
+  // Try to get orders from the recent date (today and yesterday)
+  const today = new Date();
+  const days = [today, new Date(today - 86400000)];
+  const found = [];
+
+  for (const day of days) {
+    const d = day.toISOString().slice(0,10).replace(/-/g,'');
+    for (let i = 1; i <= 20; i++) {
+      const pedidoId = `PED-${d}-${String(i).padStart(3,'0')}`;
+      try {
+        const r = await api('GET', `${API.pedidos}/api/pedidos/${pedidoId}`);
+        if (r.ok) found.push(r.data);
+      } catch {}
+    }
+  }
+
+  pedidosCache = found;
+
+  const metricPedidos = document.getElementById('metricPedidos');
+  if (metricPedidos) metricPedidos.textContent = found.length;
+
+  const badge = document.getElementById('metricPedidosBadge');
+  if (badge) badge.textContent = found.length === 0 ? 'sin pedidos hoy' : 'encontrados';
+
+  tablas.forEach(t => {
+    if (found.length === 0) {
+      t.innerHTML = `<div class="empty-state"><div class="icon">🛒</div><p>No hay pedidos registrados hoy</p></div>`;
+      return;
+    }
+    t.innerHTML = `
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Pedido ID</th>
+            <th>Cliente</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${found.map(p => `
+            <tr>
+              <td class="mono">${p.pedidoId}</td>
+              <td>${p.clienteNombre || p.clienteId}</td>
+              <td><strong>S/ ${(p.total || 0).toFixed(2)}</strong></td>
+              <td>${pillEstado(p.estado)}</td>
+              <td class="text-muted">${new Date(p.fechaCreacion).toLocaleString('es-PE')}</td>
+              <td>
+                <button class="btn btn-ghost btn-sm" onclick="verPedido('${p.pedidoId}')">Ver</button>
+                ${p.estado !== 'CANCELADO' && p.estado !== 'ENTREGADO'
+                  ? `<button class="btn btn-ghost btn-sm" style="color:var(--red-600)" onclick="cancelarPedido('${p.pedidoId}')">Cancelar</button>`
+                  : ''}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  });
+}
+
+async function buscarPedido() {
+  const id = document.getElementById('buscarPedidoId')?.value?.trim();
+  if (!id) return;
+  const r = await api('GET', `${API.pedidos}/api/pedidos/${id}`);
+  verDetallePedido(r.data);
+}
+
+async function verPedido(id) {
+  const r = await api('GET', `${API.pedidos}/api/pedidos/${id}`);
+  verDetallePedido(r.data);
+  navigateTo('pedidos');
+}
+
+function verDetallePedido(data) {
+  const wrap = document.getElementById('detallePedidoWrap');
+  const box  = document.getElementById('detallePedidoBox');
+  if (wrap) wrap.style.display = 'block';
+  if (box)  box.textContent = prettyJson(data);
+}
+
+async function cancelarPedido(id) {
+  if (!confirm(`¿Cancelar el pedido ${id}?`)) return;
+  const r = await api('PUT', `${API.pedidos}/api/pedidos/${id}/cancelar`, { motivo: 'Cancelado desde el panel' });
+  toast(r.ok ? `Pedido ${id} cancelado` : `Error: ${r.data?.mensaje}`, r.ok ? 'success' : 'error');
+  cargarPedidos();
+}
+
+// ══════════════════════════════════════════════════════
+//  NUEVO PEDIDO
+// ══════════════════════════════════════════════════════
+function agregarItem() {
+  const tbody = document.getElementById('itemsBody');
+  const idx = tbody.children.length;
+  const tr = document.createElement('tr');
+  tr.dataset.item = idx;
+  tr.innerHTML = `
+    <td><input type="text" class="item-productoId" placeholder="PROD-XXX" /></td>
+    <td><input type="text" class="item-nombre" placeholder="Nombre" /></td>
+    <td><input type="number" class="item-cantidad" value="1" min="1" style="width:60px" /></td>
+    <td><input type="number" class="item-precio" value="0.00" min="0" step="0.01" style="width:70px" /></td>
+    <td><button class="btn btn-ghost btn-sm" onclick="eliminarItem(this)">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function eliminarItem(btn) {
+  const tbody = document.getElementById('itemsBody');
+  if (tbody.children.length <= 1) { toast('Debe haber al menos un producto', 'error'); return; }
+  btn.closest('tr').remove();
+}
+
+function leerItems() {
+  const rows = document.querySelectorAll('#itemsBody tr');
+  return Array.from(rows).map(tr => ({
+    productoId:    tr.querySelector('.item-productoId').value.trim(),
+    nombre:        tr.querySelector('.item-nombre').value.trim(),
+    cantidad:      parseInt(tr.querySelector('.item-cantidad').value) || 1,
+    precioUnitario: parseFloat(tr.querySelector('.item-precio').value) || 0,
+  })).filter(i => i.productoId);
+}
+
+function limpiarFormulario() {
+  document.getElementById('f-clienteId').value = 'CLI-001';
+  document.getElementById('f-clienteNombre').value = '';
+  document.getElementById('f-clienteEmail').value = '';
+  document.getElementById('f-clienteRuc').value = '';
+  document.getElementById('f-clienteDireccion').value = '';
+  document.getElementById('f-promocion').value = '';
+  document.getElementById('f-notas').value = '';
+  document.getElementById('respuestaPedido').textContent = 'Formulario limpiado.';
+  const tbody = document.getElementById('itemsBody');
+  tbody.innerHTML = '';
+  agregarItem();
+}
+
+async function crearPedido() {
+  const btn = document.getElementById('btnCrear');
+  const box = document.getElementById('respuestaPedido');
+
+  const body = {
+    clienteId:        document.getElementById('f-clienteId').value.trim(),
+    clienteEmail:     document.getElementById('f-clienteEmail').value.trim(),
+    clienteNombre:    document.getElementById('f-clienteNombre').value.trim(),
+    clienteRuc:       document.getElementById('f-clienteRuc').value.trim() || undefined,
+    clienteDireccion: document.getElementById('f-clienteDireccion').value.trim() || undefined,
+    items:            leerItems(),
+    promocionId:      document.getElementById('f-promocion').value || undefined,
+    notas:            document.getElementById('f-notas').value.trim() || undefined,
+  };
+
+  if (!body.clienteId || !body.clienteEmail || !body.clienteNombre || body.items.length === 0) {
+    toast('Completa los campos requeridos (clienteId, email, nombre, items)', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Procesando...';
+  box.textContent = 'Enviando pedido...';
+
+  try {
+    const r = await api('POST', `${API.pedidos}/api/pedidos`, body);
+    box.textContent = prettyJson(r.data);
+    if (r.ok) {
+      toast(`Pedido ${r.data.pedidoId} creado — Total: S/${r.data.total?.toFixed(2)}`, 'success');
+    } else {
+      toast(`Error ${r.status}: ${r.data?.mensaje || 'Error al crear pedido'}`, 'error');
+    }
+  } catch (e) {
+    box.textContent = `Error de red: ${e.message}`;
+    toast('Error de red al contactar el servicio de pedidos', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✓ Confirmar pedido';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  INVENTARIO
+// ══════════════════════════════════════════════════════
+const PRODUCTOS = [
+  { id: 'PROD-YOGURT',   nombre: 'Yogurt Natural', max: 200 },
+  { id: 'PROD-LECHE',    nombre: 'Leche Gloria',   max: 100 },
+  { id: 'PROD-QUELLAVES',nombre: 'Quellaves',       max: 50 },
+  { id: 'PROD-MANTECA',  nombre: 'Manteca',         max: 100 },
+  { id: 'PROD-POLLO',    nombre: 'Pollo',           max: 150 },
+];
+
+async function cargarInventario() {
+  const grid = document.getElementById('inventarioGrid');
+  if (!grid) return;
+  grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">📦</div><p>Cargando...</p></div>`;
+
+  const resultados = await Promise.allSettled(
+    PRODUCTOS.map(p => api('GET', `${API.inventario}/api/inventario/stock/${p.id}`))
+  );
+
+  grid.innerHTML = PRODUCTOS.map((prod, i) => {
+    const r = resultados[i];
+    if (r.status !== 'fulfilled' || !r.value.ok) {
+      return `
+        <div class="stock-item">
+          <div class="stock-name">${prod.nombre}</div>
+          <div class="stock-id">${prod.id}</div>
+          <span class="pill pill-red">Sin conexión</span>
+        </div>
+      `;
+    }
+    const d = r.value.data;
+    const pct = Math.min(100, Math.round((d.stockDisponible / prod.max) * 100));
+    const barClass = d.stockDisponible === 0 ? 'empty' : d.stockDisponible < prod.max * .2 ? 'low' : '';
+    return `
+      <div class="stock-item">
+        <div class="stock-name">${prod.nombre}</div>
+        <div class="stock-id">${prod.id}</div>
+        <div class="stock-bar-wrap">
+          <div class="stock-bar ${barClass}" style="width:${pct}%"></div>
+        </div>
+        <div class="stock-qty">${d.stockDisponible}</div>
+        <div class="stock-label">disponible / ${d.stockActual} total</div>
+        ${d.stockReservado > 0 ? `<div class="stock-label" style="color:var(--amber-600)">🔒 ${d.stockReservado} reservado</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function actualizarStock() {
+  const productoId = document.getElementById('inv-productoId').value;
+  const operacion  = document.getElementById('inv-operacion').value;
+  const cantidad   = parseInt(document.getElementById('inv-cantidad').value) || 1;
+
+  const r = await api('PUT', `${API.inventario}/api/inventario/stock/${productoId}`, { operacion, cantidad });
+  if (r.ok) {
+    toast(`Stock actualizado: ${productoId} → ${r.data.valorNuevo}`, 'success');
+    cargarInventario();
+  } else {
+    toast(`Error: ${r.data?.mensaje}`, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  FACTURACIÓN
+// ══════════════════════════════════════════════════════
+async function calcularPromocion() {
+  const box = document.getElementById('calcBox');
+  let items;
+  try {
+    items = JSON.parse(document.getElementById('calc-items').value);
+  } catch {
+    toast('JSON de items inválido', 'error');
+    return;
+  }
+
+  const r = await api('POST', `${API.facturacion}/api/facturas/calcular`, {
+    items,
+    promocionId: document.getElementById('calc-promo').value || null,
+  });
+  box.textContent = prettyJson(r.data);
+}
+
+async function buscarFactura(tipo) {
+  const id  = document.getElementById('buscarFacturaId').value.trim();
+  const box = document.getElementById('facturaBox');
+  if (!id) return;
+
+  const url = tipo === 'pedido'
+    ? `${API.facturacion}/api/facturas/pedido/${id}`
+    : `${API.facturacion}/api/facturas/${id}`;
+
+  const r = await api('GET', url);
+  box.textContent = prettyJson(r.data);
+}
+
+// ══════════════════════════════════════════════════════
+//  TRANSPORTE
+// ══════════════════════════════════════════════════════
+async function cargarCamiones() {
+  const wrap = document.getElementById('camionesWrap');
+  if (!wrap) return;
+  const r = await api('GET', `${API.transporte}/api/transporte/camiones`);
+  if (!r.ok) {
+    wrap.innerHTML = `<div class="empty-state"><div class="icon">🚚</div><p>No se pudo cargar camiones</p></div>`;
+    return;
+  }
+
+  const d = r.data;
+
+  // Update metric
+  const metricCamiones = document.getElementById('metricCamiones');
+  if (metricCamiones) {
+    metricCamiones.textContent = d.disponibles;
+    metricCamiones.className = `card-value ${d.disponibles > 0 ? 'green' : 'red'}`;
+  }
+
+  const badge = document.getElementById('metricCamionesBadge');
+  if (badge) badge.textContent = `de ${d.total} camiones`;
+
+  wrap.innerHTML = `
+    <h3 style="font-size:14px;font-weight:700;color:var(--slate-700);margin-bottom:14px">
+      Flota (${d.disponibles} disponibles / ${d.total} total)
+    </h3>
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>ID</th><th>Placa</th><th>Tipo</th><th>Conductor</th>
+            <th>Capacidad</th><th>Estado</th><th>Ubicación</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${d.camiones.map(c => `
+            <tr>
+              <td class="mono">${c.transportistaId}</td>
+              <td>${c.placa}</td>
+              <td>${c.tipo}</td>
+              <td>${c.conductor}</td>
+              <td>${c.capacidadKg} kg</td>
+              <td>${pillEstado(c.estado)}</td>
+              <td class="text-muted">${c.ubicacion}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function consultarTransporte() {
+  const id  = document.getElementById('trans-pedidoId').value.trim();
+  const box = document.getElementById('transporteBox');
+  if (!id) return;
+  const r = await api('GET', `${API.transporte}/api/transporte/estado/${id}`);
+  box.textContent = prettyJson(r.data);
+}
+
+async function actualizarTransporte() {
+  const id     = document.getElementById('trans-pedidoId').value.trim();
+  const estado = document.getElementById('trans-estado').value;
+  const box    = document.getElementById('transporteBox');
+  if (!id) return;
+  const r = await api('PUT', `${API.transporte}/api/transporte/estado/${id}`, { estado });
+  box.textContent = prettyJson(r.data);
+  if (r.ok) toast(`Estado actualizado a ${estado}`, 'success');
+  else      toast(`Error: ${r.data?.mensaje}`, 'error');
+  cargarCamiones();
+}
+
+// ══════════════════════════════════════════════════════
+//  NOTIFICACIONES
+// ══════════════════════════════════════════════════════
+async function cargarHistorialNotif() {
+  const wrap = document.getElementById('historialNotif');
+  if (!wrap) return;
+
+  const r = await api('GET', `${API.notificaciones}/api/notificaciones/historial?limit=30`);
+  if (!r.ok) {
+    wrap.innerHTML = `<div class="empty-state"><div class="icon">📧</div><p>No se pudo cargar historial</p></div>`;
+    return;
+  }
+
+  const d = r.data;
+
+  // Update metric
+  const metricNotif = document.getElementById('metricNotif');
+  if (metricNotif) metricNotif.textContent = d.total;
+
+  if (d.notificaciones.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="icon">📧</div><p>Sin notificaciones aún</p></div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <table class="data">
+      <thead>
+        <tr><th>ID</th><th>Email</th><th>Asunto</th><th>Estado</th><th>Fecha</th></tr>
+      </thead>
+      <tbody>
+        ${d.notificaciones.map(n => `
+          <tr>
+            <td class="mono">${n.notificacionId}</td>
+            <td>${n.email}</td>
+            <td>${n.asunto}</td>
+            <td>${pillEstado(n.estado === 'ENVIADO' ? 'ENVIADO' : n.estado === 'FALLIDO' ? 'FALLIDO' : n.estado)}</td>
+            <td class="text-muted">${new Date(n.fechaEnvio).toLocaleString('es-PE')}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function enviarNotificacion() {
+  const box = document.getElementById('notifBox');
+  const r = await api('POST', `${API.notificaciones}/api/notificaciones/enviar`, {
+    email:   document.getElementById('notif-email').value.trim(),
+    asunto:  document.getElementById('notif-asunto').value.trim(),
+    mensaje: document.getElementById('notif-mensaje').value.trim(),
+  });
+  box.textContent = prettyJson(r.data);
+  toast(r.ok ? 'Notificación enviada' : `Error: ${r.data?.mensaje}`, r.ok ? 'success' : 'error');
+  if (r.ok) cargarHistorialNotif();
+}
+
+// ══════════════════════════════════════════════════════
+//  PRUEBAS
+// ══════════════════════════════════════════════════════
+const pedidoBase = {
+  clienteId:     'CLI-PRUEBA',
+  clienteEmail:  'prueba@logifresh.com',
+  clienteNombre: 'Cliente Prueba',
+  clienteDireccion: 'Av. Test 123',
+  items: [{ productoId: 'PROD-YOGURT', nombre: 'Yogurt', cantidad: 2, precioUnitario: 3.50 }],
+};
+
+async function simularLento() {
+  const box = document.getElementById('boxLento');
+  box.textContent = '⏳ Esperando respuesta (puede demorar >9 segundos)...';
+  const t0 = Date.now();
+  const r = await api('POST', `${API.pedidos}/api/pedidos/test/lento`, { ...pedidoBase, promocionId: 'PROMO-2X1' });
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+  box.textContent = `⏱ Tiempo: ${elapsed}s\n\n` + prettyJson(r.data);
+  toast(`Respuesta lenta en ${elapsed}s`, 'info');
+}
+
+async function simularFalloNotif() {
+  const box = document.getElementById('boxFalloNotif');
+  const r = await api('POST', `${API.notificaciones}/api/notificaciones/test/fallo`, {
+    email: 'fallo@test.com', asunto: 'Fallo simulado', mensaje: 'Test'
+  });
+  box.textContent = prettyJson(r.data);
+  toast(`Fallo simulado: HTTP ${r.status}`, r.ok ? 'info' : 'error');
+}
+
+async function simularStockInsuficiente() {
+  const box = document.getElementById('boxStock');
+  const r = await api('POST', `${API.pedidos}/api/pedidos`, {
+    ...pedidoBase,
+    items: [{ productoId: 'PROD-QUELLAVES', nombre: 'Quellaves', cantidad: 6, precioUnitario: 8.00 }],
+  });
+  box.textContent = prettyJson(r.data);
+  toast(r.status === 409 ? 'Stock insuficiente detectado correctamente' : `HTTP ${r.status}`, 'info');
+}
+
+async function simularNotifLenta() {
+  const box = document.getElementById('boxNotifLenta');
+  box.textContent = '⏳ Enviando notificación lenta (5s)...';
+  const t0 = Date.now();
+  const r = await api('POST', `${API.notificaciones}/api/notificaciones/test/lento`, {
+    email: 'lento@test.com', asunto: 'Notificación lenta', mensaje: 'Simulación'
+  });
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+  box.textContent = `⏱ Tiempo: ${elapsed}s\n\n` + prettyJson(r.data);
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+checkAllServices();
+cargarPedidos();
+
+// Refresh health every 30s
+setInterval(checkAllServices, 30000);
+</script>
+</body>
+</html>

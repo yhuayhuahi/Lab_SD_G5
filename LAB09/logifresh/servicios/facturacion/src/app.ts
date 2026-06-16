@@ -56,7 +56,9 @@ export function createApp(): Application {
   // POST /api/facturas/generar
   app.post("/api/facturas/generar", async (req: Request, res: Response) => {
     try {
-      const { pedidoId, clienteId, clienteNombre, clienteRuc, clienteDireccion, items, promocionId } = req.body;
+      const { pedidoId, clienteId, clienteNombre, clienteRuc, clienteDireccion, items } = req.body;
+      // Acepta tanto promocionId (interno) como promocionAplicada (enviado por pedidos)
+      const promocionId = req.body.promocionId ?? req.body.promocionAplicada ?? null;
 
       if (!pedidoId || !clienteId || !items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({
@@ -80,10 +82,12 @@ export function createApp(): Application {
     } catch (error: any) {
       console.error("Error en /generar:", error);
 
-      if (error.message?.startsWith("DUPLICATE_INVOICE")) {
+      if (error.message?.startsWith("DUPLICATE_INVOICE:")) {
+        const facturaExistente = error.message.split("DUPLICATE_INVOICE:")[1]?.trim();
         return res.status(409).json({
           error: "DUPLICATE_INVOICE",
-          mensaje: error.message,
+          mensaje: `Ya existe una factura para el pedido ${req.body.pedidoId}`,
+          facturaExistente,
           timestamp: new Date().toISOString(),
         });
       }
@@ -91,6 +95,40 @@ export function createApp(): Application {
       res.status(500).json({
         error: "INTERNAL_ERROR",
         mensaje: "Error al generar la factura",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
+  // GET /api/facturas/pedido/:pedidoId  — debe ir ANTES de /:id para que Express no capture "pedido" como id
+  app.get("/api/facturas/pedido/:pedidoId", async (req: Request, res: Response) => {
+    try {
+      const { pedidoId } = req.params;
+
+      if (!pedidoId || typeof pedidoId !== "string") {
+        return res.status(400).json({
+          error: "VALIDATION_ERROR",
+          mensaje: "ID de pedido inválido",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const factura = await facturaService.obtenerFacturaPorPedido(pedidoId);
+
+      if (!factura) {
+        return res.status(404).json({
+          error: "NOT_FOUND",
+          mensaje: `No existe factura para el pedido: ${pedidoId}`,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      res.json(factura);
+    } catch (error) {
+      console.error("Error en /pedido/:pedidoId:", error);
+      res.status(500).json({
+        error: "INTERNAL_ERROR",
+        mensaje: "Error al obtener la factura",
         timestamp: new Date().toISOString(),
       });
     }
@@ -123,41 +161,6 @@ export function createApp(): Application {
       res.json(factura);
     } catch (error) {
       console.error("Error en /facturas/:id:", error);
-      res.status(500).json({
-        error: "INTERNAL_ERROR",
-        mensaje: "Error al obtener la factura",
-        timestamp: new Date().toISOString(),
-      });
-    }
-  });
-
-  // GET /api/facturas/pedido/:pedidoId
-  app.get("/api/facturas/pedido/:pedidoId", async (req: Request, res: Response) => {
-    try {
-      const { pedidoId } = req.params;
-      
-      // Asegurar que pedidoId es string y no undefined
-      if (!pedidoId || typeof pedidoId !== "string") {
-        return res.status(400).json({
-          error: "VALIDATION_ERROR",
-          mensaje: "ID de pedido inválido",
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      const factura = await facturaService.obtenerFacturaPorPedido(pedidoId);
-
-      if (!factura) {
-        return res.status(404).json({
-          error: "NOT_FOUND",
-          mensaje: `No existe factura para el pedido: ${pedidoId}`,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      res.json(factura);
-    } catch (error) {
-      console.error("Error en /pedido/:pedidoId:", error);
       res.status(500).json({
         error: "INTERNAL_ERROR",
         mensaje: "Error al obtener la factura",
