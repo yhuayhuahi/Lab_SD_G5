@@ -57,7 +57,7 @@ async function procesarCreacionPedido(body: CreatePedidoBody) {
   const pedidoId = await generarPedidoId();
   const inicio = new Date();
 
-  // Paso 1: Validar stock en inventario
+  // Paso 1: Validar stock
   const stockItems = items.map((i) => ({ productoId: i.productoId, cantidad: i.cantidad }));
   let stockResult;
   try {
@@ -81,7 +81,7 @@ async function procesarCreacionPedido(body: CreatePedidoBody) {
     throw new InsufficientStockError(faltantes);
   }
 
-  // Paso 2: Reservar stock
+  // Paso 2: Reservar stock (decrementa directamente en Redis)
   try {
     await inventario.reservarStock(pedidoId, stockItems);
   } catch (err) {
@@ -90,23 +90,37 @@ async function procesarCreacionPedido(body: CreatePedidoBody) {
     });
   }
 
-  // Paso 3: Calcular totales con promoción
+  // Paso 3: Calcular factura y asignar transporte EN PARALELO
+  // (ambos pueden empezar inmediatamente tras reservar stock)
   const factItems = items.map((i) => ({
     productoId: i.productoId,
     cantidad: i.cantidad,
     precioUnitario: i.precioUnitario,
   }));
-  let calculo;
-  try {
-    calculo = await facturacion.calcularFactura(factItems, promocionId);
-  } catch (err) {
+
+  const [calculoResult, transporteResult] = await Promise.allSettled([
+    facturacion.calcularFactura(factItems, promocionId),
+    transporte.asignarTransporte(pedidoId, clienteDireccion ?? '', 'ALTA'),
+  ]);
+
+  // Transporte es no-crítico: si falla, el pedido continúa
+  let transporteData: Awaited<ReturnType<typeof transporte.asignarTransporte>> | null = null;
+  if (transporteResult.status === 'fulfilled') {
+    transporteData = transporteResult.value;
+  } else {
+    logger.warn(`No se pudo asignar transporte para ${pedidoId}: ${(transporteResult.reason as Error)?.message}`);
+  }
+
+  // Calcular es crítico: si falla, liberar stock y abortar
+  if (calculoResult.status === 'rejected') {
     await inventario.liberarStock(pedidoId, stockItems).catch(() => {});
     throw Object.assign(new Error('El servicio de facturación no responde. Intente nuevamente'), {
       tipo: 'SERVICE_UNAVAILABLE',
     });
   }
+  const calculo = calculoResult.value;
 
-  // Paso 4: Generar factura
+  // Paso 4: Generar factura en PostgreSQL
   const itemsFactura = items.map((i) => ({
     productoId: i.productoId,
     nombre: i.nombre,
@@ -144,29 +158,21 @@ async function procesarCreacionPedido(body: CreatePedidoBody) {
     });
   }
 
-  // Paso 5: Asignar transporte (no crítico: si falla, el pedido queda confirmado sin transportista)
-  let transporteResult: Awaited<ReturnType<typeof transporte.asignarTransporte>> | null = null;
-  try {
-    transporteResult = await transporte.asignarTransporte(pedidoId, clienteDireccion ?? '', 'ALTA');
-  } catch (err) {
-    logger.warn(`No se pudo asignar transporte para ${pedidoId}, el pedido se registrará sin transportista`);
-  }
-
-  // Paso 6: Notificar al cliente (fire-and-forget, no bloquea)
+  // Paso 5: Notificar al cliente (fire-and-forget, no bloquea el flujo)
   enviarNotificacion({
     email: clienteEmail,
     asunto: 'Confirmación de Pedido - LogiFresh',
-    mensaje: `Estimado cliente, su pedido ${pedidoId} ha sido confirmado. Total: S/${calculo.total.toFixed(2)}. Tiempo estimado de entrega: ${transporteResult?.tiempoEstimadoMin ?? 'N/A'} minutos.`,
+    mensaje: `Estimado cliente, su pedido ${pedidoId} ha sido confirmado. Total: S/${factura.totalConIgv.toFixed(2)} (inc. IGV). Tiempo estimado de entrega: ${transporteData?.tiempoEstimadoMin ?? 'N/A'} minutos.`,
     pedidoId,
     template: 'PEDIDO_CONFIRMADO',
     datosAdicionales: {
-      total: calculo.total,
-      transportistaId: transporteResult?.transportistaId,
-      tiempoEstimadoMin: transporteResult?.tiempoEstimadoMin,
+      total: factura.totalConIgv,
+      transportistaId: transporteData?.transportistaId,
+      tiempoEstimadoMin: transporteData?.tiempoEstimadoMin,
     },
   });
 
-  // Paso 7: Persistir en MongoDB
+  // Paso 6: Persistir en MongoDB
   const itemsConSubtotal = items.map((i) => ({
     productoId: i.productoId,
     nombre: i.nombre,
@@ -188,10 +194,12 @@ async function procesarCreacionPedido(body: CreatePedidoBody) {
     subtotal: calculo.subtotal,
     descuento: calculo.descuento,
     total: calculo.total,
+    igv: factura.igv,
+    totalConIgv: factura.totalConIgv,
     facturaId: factura.facturaId,
-    transportistaId: transporteResult?.transportistaId,
-    tiempoEstimadoEntregaMin: transporteResult?.tiempoEstimadoMin,
-    estadoTransporte: transporteResult ? 'ASIGNADO' : undefined,
+    transportistaId: transporteData?.transportistaId,
+    tiempoEstimadoEntregaMin: transporteData?.tiempoEstimadoMin,
+    estadoTransporte: transporteData ? 'ASIGNADO' : undefined,
     historialEstados: [
       { estado: 'PENDIENTE', fecha: inicio },
       { estado: 'CONFIRMADO', fecha: new Date() },
@@ -209,9 +217,11 @@ async function procesarCreacionPedido(body: CreatePedidoBody) {
     subtotal: calculo.subtotal,
     descuento: calculo.descuento,
     total: calculo.total,
+    igv: factura.igv,
+    totalConIgv: factura.totalConIgv,
     facturaId: factura.facturaId,
-    transportistaId: transporteResult?.transportistaId,
-    tiempoEstimadoEntregaMin: transporteResult?.tiempoEstimadoMin,
+    transportistaId: transporteData?.transportistaId,
+    tiempoEstimadoEntregaMin: transporteData?.tiempoEstimadoMin,
   };
 }
 
@@ -299,7 +309,11 @@ export async function getPedido(req: Request, res: Response): Promise<void> {
       fechaActualizacion: pedido.fechaActualizacion,
       estado: pedido.estado,
       items: pedido.items,
+      subtotal: pedido.subtotal,
+      descuento: pedido.descuento,
       total: pedido.total,
+      igv: pedido.igv,
+      totalConIgv: pedido.totalConIgv,
       facturaId: pedido.facturaId,
       transportistaId: pedido.transportistaId,
       estadoTransporte: pedido.estadoTransporte,
@@ -354,7 +368,7 @@ export async function cancelarPedido(req: Request, res: Response): Promise<void>
     const estadoAnterior = pedido.estado;
     const ahora = new Date();
 
-    // Liberar stock reservado
+    // Devolver stock al inventario
     const stockItems = pedido.items.map((i) => ({ productoId: i.productoId, cantidad: i.cantidad }));
     let stockLiberado = false;
     try {
@@ -364,7 +378,6 @@ export async function cancelarPedido(req: Request, res: Response): Promise<void>
       logger.warn(`No se pudo liberar stock para pedido ${id}`);
     }
 
-    // Actualizar estado en MongoDB
     pedido.estado = 'CANCELADO';
     pedido.fechaActualizacion = ahora;
     pedido.historialEstados.push({ estado: 'CANCELADO', fecha: ahora });
@@ -394,7 +407,16 @@ export async function cancelarPedido(req: Request, res: Response): Promise<void>
   }
 }
 
+// Solo disponible en modo desarrollo/test para evitar abuso en producción
 export async function createPedidoLento(req: Request, res: Response): Promise<void> {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(404).json({
+      error: 'NOT_FOUND',
+      mensaje: `Ruta no encontrada: ${req.method} ${req.originalUrl}`,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
   logger.warn('Endpoint lento activado: esperando 9 segundos antes de procesar...');
   await new Promise((resolve) => setTimeout(resolve, 9000));
   await createPedido(req, res);

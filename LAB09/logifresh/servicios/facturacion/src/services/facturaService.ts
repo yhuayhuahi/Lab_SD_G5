@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { pool } from "../db";
 import { PromocionService } from "./promocionService";
 
@@ -18,6 +19,11 @@ interface GenerarFacturaDTO {
   clienteDireccion?: string;
   items: ItemInput[];
   promocionId?: string | null;
+}
+
+function generarFacturaId(): string {
+  const sufijo = randomBytes(3).toString("hex").toUpperCase();
+  return `FAC-${Date.now()}-${sufijo}`;
 }
 
 export class FacturaService {
@@ -42,19 +48,19 @@ export class FacturaService {
       }
 
       // 2. Calcular totales con promociones
-      const calculo = await this.calcular(data.items, data.promocionId || null);
-      const igv = calculo.total * 0.18;
-      const totalConIgv = calculo.total + igv;
+      const calculo = promocionService.calcular(data.items, data.promocionId || null);
+      const igv = parseFloat((calculo.total * 0.18).toFixed(2));
+      const totalConIgv = parseFloat((calculo.total + igv).toFixed(2));
 
       // 3. Insertar factura
-      const facturaId = `FAC-${Date.now()}`;
+      const facturaId = generarFacturaId();
       const facturaResult = await client.query(
-        `INSERT INTO facturas 
-         (factura_id, pedido_id, cliente_id, cliente_nombre, cliente_ruc, cliente_direccion, 
+        `INSERT INTO facturas
+         (factura_id, pedido_id, cliente_id, cliente_nombre, cliente_ruc, cliente_direccion,
           subtotal, descuento, total, igv, estado, promocion_aplicada)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-         RETURNING id, factura_id, pedido_id, cliente_id, cliente_nombre, cliente_ruc, 
-                   cliente_direccion, subtotal, descuento, total, igv, fecha_emision, 
+         RETURNING id, factura_id, pedido_id, cliente_id, cliente_nombre, cliente_ruc,
+                   cliente_direccion, subtotal, descuento, total, igv, fecha_emision,
                    estado, promocion_aplicada`,
         [
           facturaId,
@@ -74,24 +80,27 @@ export class FacturaService {
 
       const factura = facturaResult.rows[0];
 
-      // 4. Insertar items de factura
-      for (const item of data.items) {
-        const itemConDescuento = calculo.itemsConDescuento.find(
-          (i) => i.productoId === item.productoId
+      // 4. Insertar items en batch (1 sola query en lugar de N queries secuenciales)
+      if (data.items.length > 0) {
+        const descMap = new Map(
+          calculo.itemsConDescuento.map((i) => [i.productoId, i.descuentoAplicado])
         );
-
+        const placeholders = data.items
+          .map((_, i) => `($${i * 6 + 1}, $${i * 6 + 2}, $${i * 6 + 3}, $${i * 6 + 4}, $${i * 6 + 5}, $${i * 6 + 6})`)
+          .join(", ");
+        const valores = data.items.flatMap((item) => [
+          factura.id,
+          item.productoId,
+          item.nombre,
+          item.cantidad,
+          item.precioUnitario,
+          descMap.get(item.productoId) ?? 0,
+        ]);
         await client.query(
-          `INSERT INTO items_factura 
+          `INSERT INTO items_factura
            (factura_id, producto_id, nombre_producto, cantidad, precio_unitario, descuento_aplicado)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            factura.id,
-            item.productoId,
-            item.nombre,
-            item.cantidad,
-            item.precioUnitario,
-            itemConDescuento?.descuentoAplicado || 0,
-          ]
+           VALUES ${placeholders}`,
+          valores
         );
       }
 
@@ -109,24 +118,30 @@ export class FacturaService {
         descuentoTotal: Number(factura.descuento),
         total: Number(factura.total),
         igv: Number(factura.igv),
-        totalConIgv: totalConIgv,
+        totalConIgv,
         promocionAplicada: factura.promocion_aplicada,
         estado: factura.estado,
       };
-    } catch (error) {
+    } catch (error: any) {
       await client.query("ROLLBACK");
+      // Capturar violación de UNIQUE en pedido_id a nivel DB (race condition)
+      if (error.code === "23505") {
+        const existing = await pool.query(
+          "SELECT factura_id FROM facturas WHERE pedido_id = $1",
+          [data.pedidoId]
+        );
+        const existingId = existing.rows[0]?.factura_id ?? "unknown";
+        throw new Error(`DUPLICATE_INVOICE:${existingId}`);
+      }
       throw error;
     } finally {
       client.release();
     }
   }
 
-  // Obtener factura por ID 
   async obtenerFacturaPorId(facturaId: string) {
     const client = await pool.connect();
-
     try {
-      // Obtener factura por factura_id (string)
       const facturaResult = await client.query(
         `SELECT id, factura_id, pedido_id, cliente_id, cliente_nombre, cliente_ruc, cliente_direccion,
                 subtotal, descuento, total, igv, fecha_emision, estado, promocion_aplicada
@@ -134,13 +149,10 @@ export class FacturaService {
         [facturaId]
       );
 
-      if (facturaResult.rows.length === 0) {
-        return null;
-      }
+      if (facturaResult.rows.length === 0) return null;
 
       const factura = facturaResult.rows[0];
 
-      //Usar factura.id (numérico) para buscar items
       const itemsResult = await client.query(
         `SELECT producto_id, nombre_producto, cantidad, precio_unitario, descuento_aplicado
          FROM items_factura WHERE factura_id = $1`,
@@ -169,7 +181,7 @@ export class FacturaService {
         descuentoTotal: Number(factura.descuento),
         total: Number(factura.total),
         igv: Number(factura.igv),
-        totalConIgv: totalConIgv,
+        totalConIgv,
         promocionAplicada: factura.promocion_aplicada,
         estado: factura.estado,
       };
@@ -178,12 +190,9 @@ export class FacturaService {
     }
   }
 
-  // Obtener factura por pedidoId 
   async obtenerFacturaPorPedido(pedidoId: string) {
     const client = await pool.connect();
-
     try {
-      // Obtener factura por pedido_id (string)
       const facturaResult = await client.query(
         `SELECT id, factura_id, pedido_id, cliente_id, cliente_nombre, cliente_ruc, cliente_direccion,
                 subtotal, descuento, total, igv, fecha_emision, estado, promocion_aplicada
@@ -191,13 +200,10 @@ export class FacturaService {
         [pedidoId]
       );
 
-      if (facturaResult.rows.length === 0) {
-        return null;
-      }
+      if (facturaResult.rows.length === 0) return null;
 
       const factura = facturaResult.rows[0];
 
-      // ✅ CORREGIDO: Usar factura.id (numérico) para buscar items
       const itemsResult = await client.query(
         `SELECT producto_id, nombre_producto, cantidad, precio_unitario, descuento_aplicado
          FROM items_factura WHERE factura_id = $1`,
@@ -226,7 +232,7 @@ export class FacturaService {
         descuentoTotal: Number(factura.descuento),
         total: Number(factura.total),
         igv: Number(factura.igv),
-        totalConIgv: totalConIgv,
+        totalConIgv,
         promocionAplicada: factura.promocion_aplicada,
         estado: factura.estado,
       };

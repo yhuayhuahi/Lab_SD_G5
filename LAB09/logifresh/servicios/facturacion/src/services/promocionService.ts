@@ -21,7 +21,6 @@ interface CalculoResultado {
 
 export class PromocionService {
   calcular(items: Item[], promocionId: string | null): CalculoResultado {
-    // Calcular subtotal
     const subtotal = items.reduce(
       (sum, item) => sum + item.precioUnitario * item.cantidad,
       0
@@ -38,31 +37,30 @@ export class PromocionService {
       subtotalFinal: item.precioUnitario * item.cantidad,
     }));
 
-    // Promoción 2x1: el producto más barato es gratis
+    // PROMO-2X1: 1 unidad del producto más barato es gratis
+    // Aplica cuando el carrito tiene 2 o más unidades en total
     if (promocionId === "PROMO-2X1") {
-      const itemsOrdenados = [...items].sort(
-        (a, b) => a.precioUnitario - b.precioUnitario
-      );
-      const productoGratis = itemsOrdenados[0];
+      const totalUnidades = items.reduce((sum, i) => sum + i.cantidad, 0);
+      if (totalUnidades >= 2) {
+        const itemMasBarato = [...items].sort(
+          (a, b) => a.precioUnitario - b.precioUnitario
+        )[0];
 
-      if (productoGratis && productoGratis.cantidad >= 2) {
-        const unidadesGratis = Math.floor(productoGratis.cantidad / 2);
-        descuento = unidadesGratis * productoGratis.precioUnitario;
+        descuento = itemMasBarato.precioUnitario;
 
-        const itemIndex = itemsConDescuento.findIndex(
-          (i) => i.productoId === productoGratis.productoId
+        const idx = itemsConDescuento.findIndex(
+          (i) => i.productoId === itemMasBarato.productoId
         );
-        if (itemIndex !== -1) {
-          itemsConDescuento[itemIndex].descuentoAplicado = descuento;
-          itemsConDescuento[itemIndex].subtotalFinal =
-            productoGratis.cantidad * productoGratis.precioUnitario - descuento;
+        if (idx !== -1) {
+          itemsConDescuento[idx].descuentoAplicado = descuento;
+          itemsConDescuento[idx].subtotalFinal -= descuento;
         }
 
-        detalleDescuento = `Promoción 2x1 aplicada en ${productoGratis.productoId}`;
+        detalleDescuento = `Promoción 2x1: 1 unidad de ${itemMasBarato.productoId} gratis (S/${descuento.toFixed(2)})`;
         promocionAplicada = "PROMO-2X1";
       }
     }
-    // Promoción 10% OFF: descuento si subtotal > 100
+    // PROMO-10OFF: 10% de descuento si el subtotal supera S/100
     else if (promocionId === "PROMO-10OFF" && subtotal > 100) {
       descuento = subtotal * 0.1;
       detalleDescuento = "10% de descuento por compra mayor a S/100";

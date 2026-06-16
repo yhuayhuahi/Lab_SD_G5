@@ -47,6 +47,7 @@ export async function enviarCorreo(
     };
 
     historialNotificaciones.unshift(fallida);
+    if (historialNotificaciones.length > 500) historialNotificaciones.pop();
     logger.error(`Fallo al enviar correo ${notificacionId} a ${input.email}`);
     return fallida;
   }
@@ -66,6 +67,7 @@ export async function enviarCorreo(
   };
 
   historialNotificaciones.unshift(enviada);
+  if (historialNotificaciones.length > 500) historialNotificaciones.pop();
 
   logger.info(`Correo simulado enviado a ${input.email}`);
   logger.info(`Asunto: ${input.asunto}`);

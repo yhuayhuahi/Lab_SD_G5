@@ -68,7 +68,13 @@ export class TransporteError extends Error {
   }
 }
 
-const camiones = new Map<string, Camion>(camionesIniciales.map((camion) => [camion.transportistaId, { ...camion }]));
+// Tiempo en ms hasta auto-completar entrega (configurable, default 2 min para el lab)
+const AUTO_ENTREGA_MS = parseInt(process.env.AUTO_ENTREGA_MS || '120000');
+const MAX_TRANSPORTES = 1000;
+
+const camiones = new Map<string, Camion>(
+  camionesIniciales.map((camion) => [camion.transportistaId, { ...camion }])
+);
 const transportes = new Map<string, TransporteRecord>();
 let siguienteCamion = 0;
 
@@ -78,15 +84,11 @@ function obtenerIdsCamiones(): string[] {
 
 function obtenerCamionDisponible(): Camion | null {
   const idsCamiones = obtenerIdsCamiones();
-
-  if (idsCamiones.length === 0) {
-    return null;
-  }
+  if (idsCamiones.length === 0) return null;
 
   for (let intento = 0; intento < idsCamiones.length; intento += 1) {
     const indice = (siguienteCamion + intento) % idsCamiones.length;
     const camion = camiones.get(idsCamiones[indice]);
-
     if (camion && camion.estado === 'DISPONIBLE') {
       siguienteCamion = (indice + 1) % idsCamiones.length;
       return camion;
@@ -98,33 +100,23 @@ function obtenerCamionDisponible(): Camion | null {
 
 function liberarCamion(transportistaId: string): void {
   const camion = camiones.get(transportistaId);
-
-  if (!camion || camion.estado === 'MANTENIMIENTO') {
-    return;
-  }
-
+  if (!camion || camion.estado === 'MANTENIMIENTO') return;
   camion.estado = 'DISPONIBLE';
   delete camion.pedidoActual;
 }
 
 function ocuparCamion(transportistaId: string, pedidoId: string): void {
   const camion = camiones.get(transportistaId);
-
-  if (!camion) {
-    return;
-  }
-
+  if (!camion) return;
   camion.estado = 'OCUPADO';
   camion.pedidoActual = pedidoId;
 }
 
 function normalizarEstado(estado: string): EstadoTransporte | null {
   const valor = estado.trim().toUpperCase();
-
   if (valor === 'ASIGNADO' || valor === 'EN_RUTA' || valor === 'ENTREGADO' || valor === 'CANCELADO') {
     return valor;
   }
-
   return null;
 }
 
@@ -133,26 +125,14 @@ function estadoTerminal(estado: EstadoTransporte): boolean {
 }
 
 function estadoPermitidoDesde(estadoActual: EstadoTransporte): EstadoTransporte[] {
-  if (estadoActual === 'ASIGNADO') {
-    return ['EN_RUTA', 'CANCELADO'];
-  }
-
-  if (estadoActual === 'EN_RUTA') {
-    return ['ENTREGADO', 'CANCELADO'];
-  }
-
+  if (estadoActual === 'ASIGNADO') return ['EN_RUTA', 'CANCELADO'];
+  if (estadoActual === 'EN_RUTA') return ['ENTREGADO', 'CANCELADO'];
   return [];
 }
 
 function calcularTiempoRestante(record: TransporteRecord): number {
-  if (record.estado === 'ENTREGADO' || record.estado === 'CANCELADO') {
-    return 0;
-  }
-
-  if (record.estado === 'EN_RUTA') {
-    return Math.max(5, Math.round(record.tiempoEstimadoMin * 0.5));
-  }
-
+  if (record.estado === 'ENTREGADO' || record.estado === 'CANCELADO') return 0;
+  if (record.estado === 'EN_RUTA') return Math.max(5, Math.round(record.tiempoEstimadoMin * 0.5));
   return record.tiempoEstimadoMin;
 }
 
@@ -163,6 +143,33 @@ function calcularTiempoTotalMin(fechaAsignacion: string, fechaActualizacion: str
 
 function obtenerRegistroTransporte(pedidoId: string): TransporteRecord | null {
   return transportes.get(pedidoId) ?? null;
+}
+
+// Simula el ciclo de entrega: ASIGNADO → EN_RUTA → ENTREGADO
+// Libera el camión automáticamente para que pueda atender nuevos pedidos
+function programarAutoEntrega(pedidoId: string, transportistaId: string): void {
+  const mitad = AUTO_ENTREGA_MS / 2;
+
+  // A la mitad del tiempo: pasa a EN_RUTA
+  setTimeout(() => {
+    const record = transportes.get(pedidoId);
+    if (record && record.estado === 'ASIGNADO') {
+      record.estado = 'EN_RUTA';
+      record.fechaActualizacion = new Date().toISOString();
+      transportes.set(pedidoId, record);
+    }
+  }, mitad);
+
+  // Al final: pasa a ENTREGADO y libera el camión
+  setTimeout(() => {
+    const record = transportes.get(pedidoId);
+    if (record && !estadoTerminal(record.estado)) {
+      record.estado = 'ENTREGADO';
+      record.fechaActualizacion = new Date().toISOString();
+      transportes.set(pedidoId, record);
+      liberarCamion(transportistaId);
+    }
+  }, AUTO_ENTREGA_MS);
 }
 
 export function listarCamiones(filtros: FiltroCamiones = {}): Array<{
@@ -191,8 +198,8 @@ export function listarCamiones(filtros: FiltroCamiones = {}): Array<{
 }
 
 export function asignarCamion(pedidoId: string, tiempoEstimadoMin: number): TransporteAsignado {
+  // Idempotente: si ya tiene transporte, retornar el existente
   const transporteExistente = obtenerRegistroTransporte(pedidoId);
-
   if (transporteExistente) {
     return {
       transportistaId: transporteExistente.transportistaId,
@@ -207,7 +214,6 @@ export function asignarCamion(pedidoId: string, tiempoEstimadoMin: number): Tran
   }
 
   const camion = obtenerCamionDisponible();
-
   if (!camion) {
     throw new TransporteError('NO_TRUCKS_AVAILABLE', 'No hay camiones disponibles en este momento', {
       tiempoEstimadoEsperaMin: 15
@@ -231,7 +237,16 @@ export function asignarCamion(pedidoId: string, tiempoEstimadoMin: number): Tran
     ubicacionActual: camion.ubicacionActual
   };
 
+  // Limitar tamaño del mapa para evitar memory leak
+  if (transportes.size >= MAX_TRANSPORTES) {
+    const primeraKey = transportes.keys().next().value;
+    if (primeraKey) transportes.delete(primeraKey);
+  }
+
   transportes.set(pedidoId, registro);
+
+  // Auto-avanzar estado y liberar camión cuando se cumple el tiempo estimado
+  programarAutoEntrega(pedidoId, camion.transportistaId);
 
   return {
     transportistaId: camion.transportistaId,
@@ -247,10 +262,7 @@ export function asignarCamion(pedidoId: string, tiempoEstimadoMin: number): Tran
 
 export function obtenerEstado(pedidoId: string): TransporteEstado | null {
   const transporte = obtenerRegistroTransporte(pedidoId);
-
-  if (!transporte) {
-    return null;
-  }
+  if (!transporte) return null;
 
   return {
     pedidoId: transporte.pedidoId,
@@ -265,19 +277,16 @@ export function obtenerEstado(pedidoId: string): TransporteEstado | null {
 
 export function actualizarEstado(pedidoId: string, estadoTexto: string): TransporteActualizado {
   const transporte = obtenerRegistroTransporte(pedidoId);
-
   if (!transporte) {
     throw new TransporteError('NOT_FOUND', 'No hay registro de transporte para el pedido');
   }
 
   const nuevoEstado = normalizarEstado(estadoTexto);
-
   if (!nuevoEstado) {
     throw new TransporteError('VALIDATION_ERROR', 'El campo estado debe ser ASIGNADO, EN_RUTA, ENTREGADO o CANCELADO');
   }
 
   const estadosPermitidos = estadoPermitidoDesde(transporte.estado);
-
   if (nuevoEstado === transporte.estado || !estadosPermitidos.includes(nuevoEstado)) {
     throw new TransporteError(
       'INVALID_STATE_TRANSITION',

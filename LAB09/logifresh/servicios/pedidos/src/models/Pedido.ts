@@ -28,6 +28,8 @@ export interface IPedido extends Document {
   subtotal?: number;
   descuento?: number;
   total?: number;
+  igv?: number;
+  totalConIgv?: number;
   facturaId?: string;
   transportistaId?: string;
   tiempoEstimadoEntregaMin?: number;
@@ -69,6 +71,8 @@ const PedidoSchema = new Schema<IPedido>({
   subtotal: Number,
   descuento: Number,
   total: Number,
+  igv: Number,
+  totalConIgv: Number,
   facturaId: String,
   transportistaId: String,
   tiempoEstimadoEntregaMin: Number,
@@ -78,6 +82,7 @@ const PedidoSchema = new Schema<IPedido>({
 
 PedidoSchema.index({ clienteId: 1 });
 PedidoSchema.index({ fechaCreacion: -1 });
+PedidoSchema.index({ estado: 1 });
 
 export const Pedido = mongoose.model<IPedido>('Pedido', PedidoSchema);
 

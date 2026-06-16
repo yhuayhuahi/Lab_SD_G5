@@ -25,13 +25,9 @@ async function obtenerStock(productoId) {
 }
 
 async function obtenerStockReservado(productoId) {
-  const keys = await client.keys(`reserva:*:${productoId}`);
-  let total = 0;
-  for (const key of keys) {
-    const v = await client.get(key);
-    total += parseInt(v || '0', 10);
-  }
-  return total;
+  // Mantenido por compatibilidad con consultarStock; retorna 0 porque
+  // las reservas ya se descuentan directamente del stock real.
+  return 0;
 }
 
 async function validarStock(items) {
@@ -40,23 +36,21 @@ async function validarStock(items) {
 
   for (const item of items) {
     const stockActual = await obtenerStock(item.productoId);
-    const stockReservado = await obtenerStockReservado(item.productoId);
-    const stockDisponible = stockActual !== null ? stockActual - stockReservado : 0;
 
-    if (stockActual === null || stockDisponible < item.cantidad) {
+    if (stockActual === null || stockActual < item.cantidad) {
       disponible = false;
       detalles.push({
         productoId: item.productoId,
         disponible: false,
         stockActual: stockActual ?? 0,
         solicitado: item.cantidad,
-        faltante: item.cantidad - Math.max(0, stockDisponible),
+        faltante: item.cantidad - Math.max(0, stockActual ?? 0),
       });
     } else {
       detalles.push({
         productoId: item.productoId,
         disponible: true,
-        stockActual: stockActual,
+        stockActual,
         solicitado: item.cantidad,
         faltante: 0,
       });
@@ -68,19 +62,18 @@ async function validarStock(items) {
 
 async function reservarStock(pedidoId, items) {
   const faltantes = [];
-  const reservas = [];
 
+  // Verificar disponibilidad antes de decrementar
   for (const item of items) {
     const stockActual = await obtenerStock(item.productoId);
-    const stockReservado = await obtenerStockReservado(item.productoId);
-    const stockDisponible = (stockActual ?? 0) - stockReservado;
+    const disponible = stockActual ?? 0;
 
-    if (stockDisponible < item.cantidad) {
+    if (disponible < item.cantidad) {
       faltantes.push({
         productoId: item.productoId,
-        disponible: stockDisponible,
+        disponible,
         solicitado: item.cantidad,
-        faltante: item.cantidad - stockDisponible,
+        faltante: item.cantidad - disponible,
       });
     }
   }
@@ -89,14 +82,17 @@ async function reservarStock(pedidoId, items) {
     return { success: false, faltantes };
   }
 
+  // Decrementar stock real directamente — no se crean claves de reserva
+  // para evitar que se acumulen tras confirmar pedidos
+  const reservas = [];
   for (const item of items) {
-    await client.set(`reserva:${pedidoId}:${item.productoId}`, item.cantidad);
     const stockActual = await obtenerStock(item.productoId);
-    const stockReservado = await obtenerStockReservado(item.productoId);
+    const nuevoStock = (stockActual ?? 0) - item.cantidad;
+    await client.set(`stock:${item.productoId}`, nuevoStock);
     reservas.push({
       productoId: item.productoId,
       cantidadReservada: item.cantidad,
-      stockRestante: (stockActual ?? 0) - stockReservado,
+      stockRestante: nuevoStock,
     });
   }
 
@@ -104,15 +100,17 @@ async function reservarStock(pedidoId, items) {
 }
 
 async function liberarStock(pedidoId, items) {
+  // Solo se llama en cancelación: devuelve el stock decrementado
   const liberaciones = [];
 
   for (const item of items) {
-    await client.del(`reserva:${pedidoId}:${item.productoId}`);
     const stockActual = await obtenerStock(item.productoId);
+    const nuevoStock = (stockActual ?? 0) + item.cantidad;
+    await client.set(`stock:${item.productoId}`, nuevoStock);
     liberaciones.push({
       productoId: item.productoId,
       cantidadLiberada: item.cantidad,
-      stockActual: stockActual ?? 0,
+      stockActual: nuevoStock,
     });
   }
 

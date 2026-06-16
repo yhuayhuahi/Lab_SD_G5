@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS facturas (
     id SERIAL PRIMARY KEY,
     factura_id VARCHAR(50) UNIQUE NOT NULL,
-    pedido_id VARCHAR(50) NOT NULL,
+    pedido_id VARCHAR(50) UNIQUE NOT NULL,
     cliente_id VARCHAR(50) NOT NULL,
     cliente_nombre VARCHAR(200),
     cliente_ruc VARCHAR(20),
