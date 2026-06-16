@@ -950,6 +950,7 @@
               <option value="PROD-QUELLAVES">PROD-QUELLAVES</option>
               <option value="PROD-MANTECA">PROD-MANTECA</option>
               <option value="PROD-POLLO">PROD-POLLO</option>
+              <option value="PROD-CARNE">PROD-CARNE</option>
             </select>
           </div>
           <div class="form-group">
@@ -1295,7 +1296,7 @@ async function cargarPedidos() {
 
   for (const day of days) {
     const d = day.toISOString().slice(0,10).replace(/-/g,'');
-    for (let i = 1; i <= 20; i++) {
+    for (let i = 1; i <= 50; i++) {
       const pedidoId = `PED-${d}-${String(i).padStart(3,'0')}`;
       try {
         const r = await api('GET', `${API.pedidos}/api/pedidos/${pedidoId}`);
@@ -1360,15 +1361,23 @@ async function buscarPedido() {
 
 async function verPedido(id) {
   const r = await api('GET', `${API.pedidos}/api/pedidos/${id}`);
+  // Si ya estamos en la página de pedidos, no volver a navegar (evita reload innecesario)
+  const pedidosPage = document.getElementById('page-pedidos');
+  if (!pedidosPage?.classList.contains('active')) {
+    navigateTo('pedidos');
+  }
   verDetallePedido(r.data);
-  navigateTo('pedidos');
 }
 
 function verDetallePedido(data) {
   const wrap = document.getElementById('detallePedidoWrap');
   const box  = document.getElementById('detallePedidoBox');
-  if (wrap) wrap.style.display = 'block';
-  if (box)  box.textContent = prettyJson(data);
+  if (wrap) {
+    wrap.style.display = 'block';
+    // Scroll suave hasta el detalle para que sea visible inmediatamente
+    setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+  if (box) box.textContent = prettyJson(data);
 }
 
 async function cancelarPedido(id) {
@@ -1476,6 +1485,7 @@ const PRODUCTOS = [
   { id: 'PROD-QUELLAVES',nombre: 'Quellaves',       max: 50 },
   { id: 'PROD-MANTECA',  nombre: 'Manteca',         max: 100 },
   { id: 'PROD-POLLO',    nombre: 'Pollo',           max: 150 },
+  { id: 'PROD-CARNE',    nombre: 'Carne de Res',    max: 150 },
 ];
 
 async function cargarInventario() {

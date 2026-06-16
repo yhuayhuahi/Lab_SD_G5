@@ -65,6 +65,8 @@ export default function () {
   const params = {
     headers: { 'Content-Type': 'application/json' },
     tags: { name: 'crear-pedido-completo' },
+    // 409 = stock insuficiente es respuesta esperada de negocio, no un error HTTP
+    responseCallback: http.expectedStatuses(200, 201, 409),
   };
 
   const res = http.post('http://localhost:8081/api/pedidos', payload, params);
