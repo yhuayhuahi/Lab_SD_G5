@@ -38,7 +38,7 @@ export class FacturaService {
       );
 
       if (facturaExistente.rows.length > 0) {
-        throw new Error(`DUPLICATE_INVOICE: Ya existe factura para pedido ${data.pedidoId}`);
+        throw new Error(`DUPLICATE_INVOICE:${facturaExistente.rows[0].factura_id}`);
       }
 
       // 2. Calcular totales con promociones
