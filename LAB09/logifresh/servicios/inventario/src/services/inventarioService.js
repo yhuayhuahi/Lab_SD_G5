@@ -1,11 +1,12 @@
 const { client } = require('../config/redis');
 
 const PRODUCTOS_INICIALES = {
-  'PROD-YOGURT': 150,
-  'PROD-LECHE': 45,
-  'PROD-QUELLAVES': 0,
-  'PROD-MANTECA': 23,
-  'PROD-POLLO': 78,
+  'PROD-YOGURT': 500,
+  'PROD-LECHE': 500,
+  'PROD-QUELLAVES': 200,
+  'PROD-MANTECA': 300,
+  'PROD-POLLO': 400,
+  'PROD-CARNE': 500,
 };
 
 async function inicializarStock() {
@@ -119,19 +120,21 @@ async function liberarStock(pedidoId, items) {
 
 async function actualizarStock(productoId, operacion, cantidad) {
   const stockActual = await obtenerStock(productoId);
-  if (stockActual === null) return null;
+
+  // SET puede inicializar un producto nuevo; INCREMENTAR/DECREMENTAR requieren que exista
+  if (stockActual === null && operacion !== 'SET') return null;
 
   let nuevoValor;
   if (operacion === 'INCREMENTAR') {
-    nuevoValor = stockActual + cantidad;
+    nuevoValor = (stockActual ?? 0) + cantidad;
   } else if (operacion === 'DECREMENTAR') {
-    nuevoValor = Math.max(0, stockActual - cantidad);
+    nuevoValor = Math.max(0, (stockActual ?? 0) - cantidad);
   } else {
     nuevoValor = cantidad;
   }
 
   await client.set(`stock:${productoId}`, nuevoValor);
-  return { valorAnterior: stockActual, valorNuevo: nuevoValor };
+  return { valorAnterior: stockActual ?? 0, valorNuevo: nuevoValor };
 }
 
 module.exports = {

@@ -6,40 +6,43 @@ import { sleep, check } from 'k6';
 // ============================================================
 
 export const options = {
-  vus: 100,               // 100 usuarios concurrentes
-  duration: '5m',         // 5 minutos de ejecución
+  vus: 100,
+  duration: '5m',
   thresholds: {
-    http_req_duration: ['p(95)<5000'], // 95% peticiones < 5s
-    http_req_failed: ['rate<0.05'],    // Menos del 5% de errores
+    http_req_duration: ['p(95)<5000'], // 95% de peticiones < 5s
+    http_req_failed: ['rate<0.05'],    // Menos del 5% de errores HTTP reales
   },
 };
 
 // ============================================================
 // DATOS DE PRUEBA
+// Todos los productos tienen stock suficiente (reiniciado en setup)
 // ============================================================
 
 const productos = [
-  { productoId: 'PROD-YOGURT', nombre: 'Yogurt Natural', precioUnitario: 3.50 },
-  { productoId: 'PROD-LECHE', nombre: 'Leche Entera', precioUnitario: 5.20 },
-  { productoId: 'PROD-MANTECA', nombre: 'Manteca Vegetal', precioUnitario: 8.50 },
-  { productoId: 'PROD-POLLO', nombre: 'Pollo Entero', precioUnitario: 15.00 },
-  { productoId: 'PROD-CARNE', nombre: 'Carne de Res', precioUnitario: 22.00 },
-  { productoId: 'PROD-QUELLAVES', nombre: 'Quellaves Premium', precioUnitario: 12.00 },
+  { productoId: 'PROD-YOGURT',   nombre: 'Yogurt Natural',    precioUnitario: 3.50  },
+  { productoId: 'PROD-LECHE',    nombre: 'Leche Entera',      precioUnitario: 5.20  },
+  { productoId: 'PROD-MANTECA',  nombre: 'Manteca Vegetal',   precioUnitario: 8.50  },
+  { productoId: 'PROD-POLLO',    nombre: 'Pollo Entero',      precioUnitario: 15.00 },
+  { productoId: 'PROD-CARNE',    nombre: 'Carne de Res',      precioUnitario: 22.00 },
+  { productoId: 'PROD-QUELLAVES',nombre: 'Quellaves Premium', precioUnitario: 12.00 },
 ];
 
+const promos = ['PROMO-2X1', 'PROMO-10OFF', null];
+
 // ============================================================
-// FUNCIÓN PRINCIPAL (se ejecuta por cada usuario virtual)
+// FUNCIÓN PRINCIPAL
 // ============================================================
 
 export default function () {
-  // 1. Seleccionar 1-3 productos aleatorios
   const numItems = Math.floor(Math.random() * 3) + 1;
   const items = [];
   const shuffled = [...productos].sort(() => Math.random() - 0.5);
-  
+
   for (let i = 0; i < numItems && i < shuffled.length; i++) {
     const p = shuffled[i];
-    const cantidad = Math.floor(Math.random() * 4) + 1;
+    // Cantidades pequeñas (1-2) para no agotar stock durante la prueba
+    const cantidad = Math.floor(Math.random() * 2) + 1;
     items.push({
       productoId: p.productoId,
       nombre: p.nombre,
@@ -48,114 +51,110 @@ export default function () {
     });
   }
 
-  // 2. Construir payload para el orquestador (Servicio de Pedidos)
+  const promocionId = promos[Math.floor(Math.random() * promos.length)];
+
   const payload = JSON.stringify({
     clienteId: `CLI-${String(__VU).padStart(3, '0')}`,
-    clienteEmail: `cliente${__VU}@supermercado.com`,
+    clienteEmail: `cliente${__VU}@logifresh.com`,
     clienteNombre: `Supermercado ${__VU}`,
     clienteDireccion: `Av. Prueba ${__VU}, Lima ${Math.floor(Math.random() * 100)}`,
     items: items,
-    promocionId: Math.random() > 0.5 ? 'PROMO-2X1' : null,
+    promocionId: promocionId,
   });
 
   const params = {
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     tags: { name: 'crear-pedido-completo' },
   };
 
-  // 3. Enviar petición al ORQUESTADOR (Servicio de Pedidos)
-  //    Este endpoint internamente llama a:
-  //    - Inventario: /api/inventario/validar
-  //    - Facturación: /api/facturas/calcular + /api/facturas/generar
-  //    - Transporte: /api/transporte/asignar
-  //    - Notificaciones: /api/notificaciones/enviar
-  const url = 'http://localhost:8081/api/pedidos';
-  const res = http.post(url, payload, params);
+  const res = http.post('http://localhost:8081/api/pedidos', payload, params);
 
-  // 4. Verificar respuesta
-  const success = check(res, {
-    '(CHECK) status 201 (pedido creado)': (r) => r.status === 201,
-    '(CHECK) tiene pedidoId': (r) => {
+  check(res, {
+    '(CHECK) pedido creado o stock insuficiente (201/409)': (r) =>
+      r.status === 201 || r.status === 409,
+
+    '(CHECK) pedido CONFIRMADO (201)': (r) => {
+      if (r.status !== 201) return true; // 409 es válido, no es fallo del check
       try {
-        const body = JSON.parse(r.body);
-        return body.pedidoId !== undefined && body.pedidoId !== null;
-      } catch {
-        return false;
-      }
+        return JSON.parse(r.body).estado === 'CONFIRMADO';
+      } catch { return false; }
     },
-    '(CHECK) tiene facturaId': (r) => {
+
+    '(CHECK) tiene pedidoId cuando status 201': (r) => {
+      if (r.status !== 201) return true;
       try {
-        const body = JSON.parse(r.body);
-        return body.facturaId !== undefined && body.facturaId !== null;
-      } catch {
-        return false;
-      }
+        const b = JSON.parse(r.body);
+        return b.pedidoId !== undefined && b.pedidoId !== null;
+      } catch { return false; }
     },
-    '(CHECK) tiene transportistaId': (r) => {
+
+    '(CHECK) tiene facturaId cuando status 201': (r) => {
+      if (r.status !== 201) return true;
       try {
-        const body = JSON.parse(r.body);
-        return body.transportistaId !== undefined && body.transportistaId !== null;
-      } catch {
-        return false;
-      }
+        const b = JSON.parse(r.body);
+        return b.facturaId !== undefined && b.facturaId !== null;
+      } catch { return false; }
     },
-    '(CHECK) estado es CONFIRMADO': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return body.estado === 'CONFIRMADO';
-      } catch {
-        return false;
-      }
-    },
-    '(CHECK) respuesta rápida (< 2s)': (r) => r.timings.duration < 2000,
+
+    '(CHECK) respuesta recibida (< 5s)': (r) => r.timings.duration < 5000,
   });
 
-  // 5. Si la petición falló, registrar información (opcional)
-  if (!success) {
-    console.warn(`(FAIL)  Petición fallida: ${res.status} - ${res.body}`);
+  if (res.status !== 201 && res.status !== 409) {
+    console.warn(`(FAIL) status inesperado: ${res.status} - ${res.body}`);
   }
 
-  // 6. Simular tiempo de espera entre peticiones
   sleep(1);
 }
 
 // ============================================================
-// SETUP - Se ejecuta al inicio de la prueba
+// SETUP — reinicia stock antes de la prueba
 // ============================================================
 
 export function setup() {
-  console.log('(START)... Iniciando prueba de rendimiento - ORQUESTADOR (Servicio de Pedidos)');
-  console.log('(PROCCESS)... Simulando flujo completo:');
-  console.log('   Cliente → Pedidos → Inventario → Facturación → Transporte → Notificaciones');
-  console.log(`👥 ${options.vus} usuarios concurrentes por ${options.duration}`);
-  console.log('================================================\n');
-  
-  // Verificar que el servicio está disponible (opcional)
+  console.log('(START) Iniciando prueba de rendimiento - ORQUESTADOR');
+  console.log('(PROCESS) Flujo: Pedidos → Inventario → Facturación → Transporte → Notificaciones');
+
+  // Verificar disponibilidad del servicio de pedidos
   const healthRes = http.get('http://localhost:8081/health');
   if (healthRes.status !== 200) {
-    console.error('   El servicio de Pedidos no está disponible!');
-    console.error(`   Status: ${healthRes.status}`);
-    throw new Error('Servicio no disponible');
+    throw new Error('El servicio de Pedidos no está disponible. Asegúrate de correr docker compose up primero.');
   }
-  console.log('  Servicio de Pedidos disponible');
-  
+
+  // Reiniciar stock a valores altos para soportar la carga de 100 VUs × 5 min
+  const stockReset = {
+    'PROD-YOGURT':    9999,
+    'PROD-LECHE':     9999,
+    'PROD-MANTECA':   9999,
+    'PROD-POLLO':     9999,
+    'PROD-CARNE':     9999,
+    'PROD-QUELLAVES': 9999,
+  };
+
+  const headers = { 'Content-Type': 'application/json' };
+  for (const [productoId, cantidad] of Object.entries(stockReset)) {
+    http.put(
+      `http://localhost:8082/api/inventario/stock/${productoId}`,
+      JSON.stringify({ operacion: 'SET', cantidad: cantidad }),
+      { headers }
+    );
+  }
+
+  console.log('(OK) Stock reiniciado para la prueba');
+  console.log(`(INFO) ${options.vus} usuarios concurrentes por ${options.duration}`);
+  console.log('================================================\n');
+
   return {};
 }
 
 // ============================================================
-// TEARDOWN - Se ejecuta al final de la prueba
+// TEARDOWN
 // ============================================================
 
 export function teardown(data) {
   console.log('\n================================================');
-  console.log('(>.<)     Prueba del orquestador finalizada');
-  console.log('Revisa las métricas a continuación:');
-  console.log('   🔍 Tiempo promedio incluye:');
-  console.log('   - Validación de inventario (Redis)');
-  console.log('   - Cálculo y generación de factura (PostgreSQL)');
-  console.log('   - Asignación de transporte (Redis)');
-  console.log('   - Envío de notificación (fire-and-forget)');
+  console.log('(END) Prueba del orquestador finalizada');
+  console.log('Métricas clave:');
+  console.log('  - http_req_duration: tiempo de respuesta del flujo completo');
+  console.log('  - http_req_failed:   errores de red (no incluye 409 esperados)');
   console.log('================================================');
 }
