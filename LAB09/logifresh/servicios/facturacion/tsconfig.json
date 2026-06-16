@@ -3,7 +3,7 @@
     "target": "esnext",
     "module": "esnext",
     "rootDir": "./",
-    "moduleResolution": "node",  // ← Cambia de "bundler" a "node"
+    "moduleResolution": "bundler",  // ← Cambia de "bundler" a "node"
     "types": ["node"],
     "outDir": "./dist",
     "esModuleInterop": true,

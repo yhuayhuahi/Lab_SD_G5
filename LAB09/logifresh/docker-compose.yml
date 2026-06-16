@@ -1,0 +1,159 @@
+version: '3.8'
+
+networks:
+  logifresh-network:
+    driver: bridge
+
+volumes:
+  postgres_data_facturacion:
+    driver: local
+  mongo-data:
+    driver: local
+  redis_data:
+    driver: local
+
+services:
+  # ============================================
+  # BASES DE DATOS
+  # ============================================
+
+  # MongoDB - Pedidos
+  mongo:
+    image: mongo:6
+    container_name: logifresh-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - logifresh-network
+
+  # PostgreSQL - Facturación
+  postgres-facturacion:
+    image: postgres:15-alpine
+    container_name: logifresh-postgres-facturacion
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: logifresh_facturacion
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_facturacion:/var/lib/postgresql/data
+      - ./servicios/facturacion/scripts:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d logifresh_facturacion"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - logifresh-network
+
+  # Redis - Inventario
+  redis-inventario:
+    image: redis:7-alpine
+    container_name: logifresh-redis-inventario
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - logifresh-network
+
+  # ============================================
+  # MICROSERVICIOS
+  # ============================================
+
+  # 1. Servicio de Pedidos (Orquestador)
+  pedidos:
+    build: ./servicios/pedidos
+    container_name: logifresh-pedidos
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://mongo:27017/pedidos
+      - INVENTARIO_URL=http://inventario:8082
+      - FACTURACION_URL=http://facturacion:8083
+      - TRANSPORTE_URL=http://transporte:8084
+      - NOTIFICACIONES_URL=http://notificaciones:8085
+    depends_on:
+      - mongo
+      - inventario
+      - facturacion
+      - transporte
+      - notificaciones
+    networks:
+      - logifresh-network
+
+  # 2. Servicio de Inventario
+  inventario:
+    build: ./servicios/inventario
+    container_name: logifresh-inventario
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - REDIS_HOST=redis-inventario
+      - REDIS_PORT=6379
+    depends_on:
+      redis-inventario:
+        condition: service_healthy
+    networks:
+      - logifresh-network
+
+  # 3. Servicio de Facturación
+  facturacion:
+    build: ./servicios/facturacion
+    container_name: logifresh-facturacion
+    ports:
+      - "8083:8083"
+    environment:
+      - PORT=8083
+      - DB_HOST=postgres-facturacion
+      - DB_PORT=5432
+      - DB_USER=admin
+      - DB_PASSWORD=secret
+      - DB_NAME=logifresh_facturacion
+    depends_on:
+      postgres-facturacion:
+        condition: service_healthy
+    volumes:
+      - ./servicios/facturacion/src:/app/src
+    networks:
+      - logifresh-network
+
+  # 4. Servicio de Transporte
+  transporte:
+    build: ./servicios/transporte
+    container_name: logifresh-transporte
+    ports:
+      - "8084:8084"
+    environment:
+      - PORT=8084
+      - NODE_ENV=development
+      - REDIS_HOST=redis-inventario
+      - REDIS_PORT=6379
+    restart: unless-stopped
+    depends_on:
+      - redis-inventario
+    networks:
+      - logifresh-network
+
+  # 5. Servicio de Notificaciones
+  notificaciones:
+    build: ./servicios/notificaciones
+    container_name: logifresh-notificaciones
+    ports:
+      - "8085:8085"
+    environment:
+      - PORT=8085
+      - NODE_ENV=development
+      - ENABLE_RANDOM_FAILURE=false
+      - RANDOM_FAILURE_RATE=0.15
+    networks:
+      - logifresh-network
