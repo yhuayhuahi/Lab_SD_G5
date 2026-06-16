@@ -50,7 +50,7 @@ async function validarStock(items) {
         disponible: false,
         stockActual: stockActual ?? 0,
         solicitado: item.cantidad,
-        faltante: item.cantidad - Math.max(0, stockDisponible),
+        faltante: item.cantidad - Math.max(0, stockDisponible), // Mantener
       });
     } else {
       detalles.push({
@@ -58,6 +58,7 @@ async function validarStock(items) {
         disponible: true,
         stockActual: stockActual,
         solicitado: item.cantidad,
+        faltante: 0, // AGREGAR faltante: 0
       });
     }
   }
