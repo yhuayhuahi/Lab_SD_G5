@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { connectRedis } = require('./config/redis');
-const { inicializarStock } = require('./services/inventarioService');
+const { inicializarStock, verificarConexion } = require('./services/inventarioService');
 const inventarioRouter = require('./routes/inventario');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -13,13 +13,26 @@ const PORT = process.env.PORT || 8082;
 app.use(cors());
 app.use(express.json());
 
-// Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    servicio: 'inventario',
-    estado: 'OK',
-    timestamp: new Date().toISOString(),
-  });
+// Health check — verifica conectividad real con Redis
+app.get('/health', async (req, res) => {
+  try {
+    const redisOk = await verificarConexion();
+    const estado = redisOk ? 'OK' : 'DEGRADADO';
+    res.status(redisOk ? 200 : 503).json({
+      servicio: 'inventario',
+      estado,
+      dependencias: { redis: redisOk ? 'conectado' : 'desconectado' },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    res.status(503).json({
+      servicio: 'inventario',
+      estado: 'ERROR',
+      dependencias: { redis: 'error' },
+      error: err.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Rutas
