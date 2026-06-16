@@ -58,6 +58,7 @@ async function validarStock(items) {
         disponible: true,
         stockActual: stockActual,
         solicitado: item.cantidad,
+        faltante: 0,
       });
     }
   }
