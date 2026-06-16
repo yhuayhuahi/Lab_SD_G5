@@ -1,2 +1,4 @@
 node_modules
 .env
+LAB09/logifresh/tests/resultados-orquestador.json
+*.json
