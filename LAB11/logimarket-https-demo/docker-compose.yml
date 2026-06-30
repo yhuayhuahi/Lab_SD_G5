@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: logimarket-api
+    restart: unless-stopped
+    networks:
+      - logimarket-network
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    ports:
+      - "3000:3000"  # Solo para pruebas directas HTTP
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Nginx como proxy inverso
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: logimarket-nginx
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - logimarket-network
+    ports:
+      - "443:443"   # HTTPS
+      - "80:80"     # HTTP para redirección
+    volumes:
+      # Logs persistentes 
+      - ./nginx/logs:/var/log/nginx
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/nginx-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+ 
+networks:
+  logimarket-network:
+    driver: bridge
+    name: logimarket-network

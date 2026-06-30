@@ -1,0 +1,3 @@
+## Logi-Market
+
+Prueba de certificado SSL autofirmado ...
