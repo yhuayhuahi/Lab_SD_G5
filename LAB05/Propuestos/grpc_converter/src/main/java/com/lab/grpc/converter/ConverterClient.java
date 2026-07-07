@@ -1,10 +1,8 @@
-package com.lab.grpc.converter;
+﻿package com.lab.grpc.converter;
 
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import com.lab.grpc.converter.ConverterProto.ConvertRequest;
-import com.lab.grpc.converter.ConverterProto.ConvertResponse;
 
 import io.grpc.ManagedChannel;      // para manejar conexion con el servidor gRPC
 import io.grpc.ManagedChannelBuilder; // construye el canal
@@ -36,7 +34,7 @@ public class ConverterClient {
             System.out.printf("  [ERROR DE RED] %s%n%n", e.getStatus()); 
             return;
         }
-        long ms = System.currentTimeMillis() - inicio; // calcula el tiempo que tardó la respuesta del servidor
+        long ms = System.currentTimeMillis() - inicio; // calcula el tiempo que tardÃ³ la respuesta del servidor
         if (resp.getSuccess()) {    // si la conversion fue exitosa muestra el resultado y el tiempo
             System.out.printf("  OK  %s%n      Resultado: %.6f  |  Tiempo: %d ms%n%n",
                     resp.getDescription(), resp.getResult(), ms);            // muestra descripcion resultado tiempo
