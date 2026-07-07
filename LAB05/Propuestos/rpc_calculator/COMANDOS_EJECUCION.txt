@@ -1,0 +1,37 @@
+﻿COMANDOS DE EJECUCION - CALCULADORA RPC TRADICIONAL
+
+REQUISITOS:
+- JDK 17 o superior.
+- Maven instalado.
+- Ejecutar los scripts desde PowerShell.
+
+EJECUCION RECOMENDADA:
+
+1. Abrir PowerShell en:
+   LAB05\Propuestos\rpc_calculator
+
+2. Habilitar scripts solo para esta terminal:
+   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+3. Ejecutar servidor:
+   .\run-server.ps1
+
+4. Abrir otra terminal PowerShell y ejecutar GUI:
+   .\run-gui.ps1
+
+5. Cliente de consola:
+   .\run-client.ps1
+
+6. Recompilar desde cero:
+   .\clean-build.ps1
+
+COMANDOS MANUALES:
+
+Servidor:
+mvn compile exec:java "-Dexec.mainClass=com.lab.rpc.calculator.CalculatorServer"
+
+GUI:
+mvn compile exec:java "-Dexec.mainClass=com.lab.rpc.calculator.CalculatorGUI"
+
+Cliente consola:
+mvn compile exec:java "-Dexec.mainClass=com.lab.rpc.calculator.CalculatorClient"
