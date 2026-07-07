@@ -72,7 +72,7 @@ public class ConverterGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1040, 690);
         setLocationRelativeTo(null);
-        setResizable(false);
+        setResizable(true);
 
         JPanel page = new JPanel();
         page.setLayout(new BoxLayout(page, BoxLayout.Y_AXIS));
@@ -170,84 +170,153 @@ public class ConverterGUI extends JFrame {
     private JPanel createConverterPanel() {
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setBackground(PAGE_BACKGROUND);
-        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 205));
+        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 230));
         wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(new Color(241, 241, 241));
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(155, 203, 255)),
-                BorderFactory.createEmptyBorder(18, 18, 18, 18)
+                BorderFactory.createEmptyBorder(18, 22, 18, 22)
         ));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.insets = new Insets(6, 8, 6, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JLabel section = new JLabel("Conversor de Unidades Online", SwingConstants.CENTER);
         section.setForeground(BLUE);
         section.setFont(new Font("Verdana", Font.BOLD, 18));
+
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 6;
+        gbc.weightx = 1.0;
         panel.add(section, gbc);
 
         gbc.gridwidth = 1;
         gbc.gridy = 1;
+        gbc.weightx = 0;
+
+        JLabel categoryLabel = createFormLabel("Categoria");
+        JLabel valueLabel = createFormLabel("Valor a convertir");
+        JLabel fromLabel = createFormLabel("Unidad origen");
+        JLabel swapLabel = createFormLabel("");
+        JLabel resultLabel = createFormLabel("Resultado");
+        JLabel toLabel = createFormLabel("Unidad destino");
+
+        gbc.gridx = 0;
+        panel.add(categoryLabel, gbc);
+
+        gbc.gridx = 1;
+        panel.add(valueLabel, gbc);
+
+        gbc.gridx = 2;
+        panel.add(fromLabel, gbc);
+
+        gbc.gridx = 3;
+        panel.add(swapLabel, gbc);
+
+        gbc.gridx = 4;
+        panel.add(resultLabel, gbc);
+
+        gbc.gridx = 5;
+        panel.add(toLabel, gbc);
+
+        gbc.gridy = 2;
 
         categoryCombo = new JComboBox<>();
         categoryCombo.setFont(new Font("Verdana", Font.PLAIN, 12));
+        categoryCombo.setPreferredSize(new Dimension(160, 30));
+        categoryCombo.setPrototypeDisplayValue(new CategoryOption(CategoryInfo.newBuilder()
+                .setCode("categoria")
+                .setLabel("Temperatura")
+                .build()));
         categoryCombo.addActionListener(e -> {
             updateUnitCombos();
             syncCategoryLinks();
+            clearResultOnly();
         });
+
         gbc.gridx = 0;
-        gbc.weightx = 0.55;
+        gbc.weightx = 0.18;
         panel.add(categoryCombo, gbc);
 
         valueField = new JTextField("100");
         valueField.setFont(new Font("Verdana", Font.PLAIN, 13));
+        valueField.setPreferredSize(new Dimension(150, 30));
+
         gbc.gridx = 1;
-        gbc.weightx = 0.25;
+        gbc.weightx = 0.14;
         panel.add(valueField, gbc);
 
         fromUnitCombo = new JComboBox<>();
         fromUnitCombo.setFont(new Font("Verdana", Font.PLAIN, 12));
+        fromUnitCombo.setPreferredSize(new Dimension(250, 30));
+        fromUnitCombo.setPrototypeDisplayValue(new UnitOption(UnitInfo.newBuilder()
+                .setCode("kg_m3")
+                .setLabel("Kilogramo por metro cubico")
+                .build()));
+
         gbc.gridx = 2;
-        gbc.weightx = 1.0;
+        gbc.weightx = 0.28;
         panel.add(fromUnitCombo, gbc);
 
         JButton swapButton = new JButton("⇄");
         swapButton.setToolTipText("Intercambiar unidades");
-        swapButton.setFont(new Font("Dialog", Font.BOLD, 14));
-        swapButton.addActionListener(e -> swapUnits());
+        swapButton.setFont(new Font("Dialog", Font.BOLD, 15));
+        swapButton.setPreferredSize(new Dimension(58, 30));
+        swapButton.addActionListener(e -> {
+            swapUnits();
+            clearResultOnly();
+        });
+
         gbc.gridx = 3;
-        gbc.weightx = 0;
+        gbc.weightx = 0.03;
         panel.add(swapButton, gbc);
-
-        toUnitCombo = new JComboBox<>();
-        toUnitCombo.setFont(new Font("Verdana", Font.PLAIN, 12));
-        gbc.gridx = 4;
-        gbc.weightx = 1.0;
-        panel.add(toUnitCombo, gbc);
-
-        JButton convertButton = new JButton("Convertir");
-        convertButton.setFont(new Font("Verdana", Font.BOLD, 13));
-        convertButton.addActionListener(e -> convert());
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.weightx = 0;
-        panel.add(convertButton, gbc);
 
         resultField = new JTextField();
         resultField.setEditable(false);
         resultField.setFont(new Font("Verdana", Font.BOLD, 13));
         resultField.setBackground(Color.WHITE);
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        gbc.gridwidth = 4;
-        gbc.weightx = 1.0;
+        resultField.setPreferredSize(new Dimension(160, 30));
+
+        gbc.gridx = 4;
+        gbc.weightx = 0.16;
         panel.add(resultField, gbc);
+
+        toUnitCombo = new JComboBox<>();
+        toUnitCombo.setFont(new Font("Verdana", Font.PLAIN, 12));
+        toUnitCombo.setPreferredSize(new Dimension(250, 30));
+        toUnitCombo.setPrototypeDisplayValue(new UnitOption(UnitInfo.newBuilder()
+                .setCode("g_cm3")
+                .setLabel("Gramo por centimetro cubico")
+                .build()));
+
+        gbc.gridx = 5;
+        gbc.weightx = 0.28;
+        panel.add(toUnitCombo, gbc);
+
+        JButton convertButton = new JButton("Convertir");
+        convertButton.setFont(new Font("Verdana", Font.BOLD, 13));
+        convertButton.setPreferredSize(new Dimension(145, 32));
+        convertButton.addActionListener(e -> convert());
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0;
+        panel.add(convertButton, gbc);
+
+        JLabel hintLabel = new JLabel("Selecciona una categoria, escribe el valor y elige las unidades. El calculo se realiza mediante gRPC.");
+        hintLabel.setForeground(new Color(90, 90, 90));
+        hintLabel.setFont(new Font("Verdana", Font.PLAIN, 11));
+
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.gridwidth = 5;
+        gbc.weightx = 1.0;
+        panel.add(hintLabel, gbc);
 
         valueField.addActionListener(e -> convert());
 
@@ -255,6 +324,18 @@ public class ConverterGUI extends JFrame {
         return wrapper;
     }
 
+    private JLabel createFormLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setForeground(BLUE);
+        label.setFont(new Font("Verdana", Font.BOLD, 11));
+        return label;
+    }
+
+    private void clearResultOnly() {
+        if (resultField != null) {
+            resultField.setText("");
+        }
+    }
     private JPanel createHistoryPanel() {
         JPanel panel = new JPanel(new BorderLayout(12, 8));
         panel.setBackground(Color.WHITE);
@@ -476,7 +557,12 @@ public class ConverterGUI extends JFrame {
         UnitOption toOption = (UnitOption) toUnitCombo.getSelectedItem();
 
         if (categoryOption == null || fromOption == null || toOption == null) {
-            JOptionPane.showMessageDialog(this, "Selecciona categoria y unidades.", "Datos incompletos", JOptionPane.WARNING_MESSAGE);
+            String message = "Selecciona categoria y unidades.";
+            resultField.setText("");
+            historyArea.append("[ERROR] " + message + "\n");
+            statusLabel.setText("Datos incompletos");
+            statusLabel.setForeground(Color.RED);
+            showErrorPopup(message);
             return;
         }
 
@@ -484,7 +570,12 @@ public class ConverterGUI extends JFrame {
         try {
             value = Double.parseDouble(valueField.getText().trim());
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Ingresa un numero valido.", "Error", JOptionPane.ERROR_MESSAGE);
+            String message = "Ingresa un numero valido.";
+            resultField.setText("");
+            historyArea.append("[ERROR] " + message + "\n");
+            statusLabel.setText("Entrada no valida");
+            statusLabel.setForeground(Color.RED);
+            showErrorPopup(message);
             return;
         }
 
@@ -509,19 +600,30 @@ public class ConverterGUI extends JFrame {
                 statusLabel.setText("Conversion realizada en " + elapsedMs + " ms");
                 statusLabel.setForeground(new Color(39, 174, 96));
             } else {
+                String message = response.getErrorMessage();
+                if (message == null || message.isBlank()) {
+                    message = "La conversion no es valida.";
+                }
+
                 resultField.setText("");
-                historyArea.append("[ERROR] " + response.getErrorMessage() + "\n");
-                statusLabel.setText("Error en la conversion");
+                historyArea.append("[ERROR] " + message + "\n");
+                statusLabel.setText("Conversion no valida");
                 statusLabel.setForeground(Color.RED);
+                showErrorPopup(message);
             }
         } catch (StatusRuntimeException ex) {
+            String message = "No se pudo conectar con el servidor gRPC.";
+            resultField.setText("");
             historyArea.append("[ERROR DE RED] " + ex.getStatus() + "\n");
             statusLabel.setText("Sin conexion con el servidor");
             statusLabel.setForeground(Color.RED);
+            showErrorPopup(message);
         }
     }
 
-
+    private void showErrorPopup(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
     @Override
     public void dispose() {
         channel.shutdown();
