@@ -17,6 +17,8 @@ public class CalculatorClient {
 
                 long start = System.nanoTime();
 
+                double addition = calculator.add(a, b);
+                double subtraction = calculator.subtract(a, b);
                 double multiplication = calculator.multiply(a, b);
                 double division = calculator.divide(a, b);
                 double power = calculator.power(a, b);
@@ -25,6 +27,8 @@ public class CalculatorClient {
 
                 System.out.println();
                 System.out.println("=== RESULTADOS RPC ===");
+                System.out.println("Suma: " + addition);
+                System.out.println("Resta: " + subtraction);
                 System.out.println("Multiplicacion: " + multiplication);
                 System.out.println("Division: " + division);
                 System.out.println("Potencia: " + power);
