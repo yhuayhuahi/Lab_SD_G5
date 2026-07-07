@@ -264,7 +264,26 @@ public class CalculatorGUI extends JFrame {
     private void setOperation(String operation) {
         try {
             ensureConnected();
-            firstOperand = parseCurrentInput();
+
+            if (pendingOperation != null && !resetInput) {
+                double secondOperand = parseCurrentInput();
+
+                long start = System.nanoTime();
+                double intermediateResult = executeRemoteOperation(firstOperand, secondOperand, pendingOperation);
+                long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+                miniDisplay.setText(
+                        format(firstOperand) + " " + symbolFor(pendingOperation) + " " + format(secondOperand)
+                                + " = " + format(intermediateResult) + "  |  " + elapsedMs + " ms"
+                );
+
+                currentInput = format(intermediateResult);
+                firstOperand = intermediateResult;
+                updateDisplay();
+            } else {
+                firstOperand = parseCurrentInput();
+            }
+
             pendingOperation = operation;
             resetInput = true;
             miniDisplay.setText(format(firstOperand) + " " + symbolFor(operation));
@@ -272,7 +291,6 @@ public class CalculatorGUI extends JFrame {
             showError(ex.getMessage());
         }
     }
-
     private void unarySquare() {
         try {
             ensureConnected();
