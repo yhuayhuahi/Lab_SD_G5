@@ -6,11 +6,19 @@ option java_outer_classname = "ConverterProto";
 
 service Converter {
   rpc Convert (ConvertRequest) returns (ConvertResponse);
+  rpc GetCatalog (CatalogRequest) returns (CatalogResponse);
 }
 
 message ConvertRequest {
+  // Campo anterior para mantener compatibilidad con las primeras pruebas.
   string type = 1;
+
   double value = 2;
+
+  // Nuevos campos para un conversor de unidades mas general.
+  string category = 3;
+  string from_unit = 4;
+  string to_unit = 5;
 }
 
 message ConvertResponse {
@@ -18,4 +26,28 @@ message ConvertResponse {
   string description = 2;
   bool success = 3;
   string errorMessage = 4;
+
+  string category = 5;
+  string from_unit = 6;
+  string to_unit = 7;
+}
+
+message CatalogRequest {
+}
+
+message UnitInfo {
+  string code = 1;
+  string label = 2;
+}
+
+message CategoryInfo {
+  string code = 1;
+  string label = 2;
+  string default_from_unit = 3;
+  string default_to_unit = 4;
+  repeated UnitInfo units = 5;
+}
+
+message CatalogResponse {
+  repeated CategoryInfo categories = 1;
 }
