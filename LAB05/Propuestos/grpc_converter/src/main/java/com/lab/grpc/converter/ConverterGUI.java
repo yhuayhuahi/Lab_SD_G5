@@ -22,23 +22,33 @@ import javax.swing.UIManager;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ConverterGUI extends JFrame {
 
     private static final Color BLUE = new Color(51, 102, 153);
     private static final Color DARK_BLUE = new Color(0, 0, 102);
-    private static final Color LIGHT_ROW = new Color(229, 242, 255);
     private static final Color PAGE_BACKGROUND = new Color(221, 221, 221);
+    private static final Color PANEL_BACKGROUND = new Color(245, 247, 249);
+    private static final Color ACTIVE_LINK_BG = new Color(229, 242, 255);
 
     private final ManagedChannel channel;
     private final ConverterGrpc.ConverterBlockingStub stub;
 
+    private final List<CategoryInfo> loadedCategories = new ArrayList<>();
+    private final Map<String, JButton> categoryLinkButtons = new LinkedHashMap<>();
+
+    private JPanel menuPanel;
     private JComboBox<CategoryOption> categoryCombo;
     private JComboBox<UnitOption> fromUnitCombo;
     private JComboBox<UnitOption> toUnitCombo;
@@ -58,27 +68,28 @@ public class ConverterGUI extends JFrame {
     private void initUI() {
         setTitle("Conversor de Unidades gRPC");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(860, 610);
+        setSize(1040, 620);
         setLocationRelativeTo(null);
         setResizable(false);
 
         JPanel page = new JPanel();
         page.setLayout(new BoxLayout(page, BoxLayout.Y_AXIS));
         page.setBackground(PAGE_BACKGROUND);
-        page.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
+        page.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 0));
 
         page.add(createHeader());
-        page.add(Box.createVerticalStrut(12));
+        page.add(Box.createVerticalStrut(14));
         page.add(createMenuPanel());
-        page.add(Box.createVerticalStrut(12));
+        page.add(Box.createVerticalStrut(16));
         page.add(createConverterPanel());
-        page.add(Box.createVerticalStrut(12));
+        page.add(Box.createVerticalStrut(14));
         page.add(createHistoryPanel());
         page.add(Box.createVerticalStrut(8));
 
         statusLabel = new JLabel("Conectando con servidor gRPC en localhost:50051");
         statusLabel.setFont(new Font("Verdana", Font.ITALIC, 11));
         statusLabel.setForeground(BLUE);
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 0));
         statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         page.add(statusLabel);
 
@@ -86,18 +97,21 @@ public class ConverterGUI extends JFrame {
     }
 
     private JPanel createHeader() {
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(BLUE);
-        header.setPreferredSize(new Dimension(820, 85));
-        header.setMaximumSize(new Dimension(Integer.MAX_VALUE, 85));
-        header.setBorder(BorderFactory.createEmptyBorder(10, 18, 10, 18));
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(BLUE);
+        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 86));
+        wrapper.setPreferredSize(new Dimension(1040, 86));
+
+        JPanel inner = new JPanel(new BorderLayout());
+        inner.setOpaque(false);
+        inner.setBorder(BorderFactory.createEmptyBorder(12, 22, 12, 22));
 
         JLabel title = new JLabel("Conversor de Unidades .gRPC");
         title.setForeground(Color.WHITE);
         title.setFont(new Font("Verdana", Font.BOLD, 23));
 
-        JLabel subtitle = new JLabel("convertir medidas usando un servicio distribuido con Protocol Buffers");
-        subtitle.setForeground(new Color(230, 230, 230));
+        JLabel subtitle = new JLabel("convertir medidas con un servicio distribuido basado en Protocol Buffers");
+        subtitle.setForeground(new Color(225, 225, 225));
         subtitle.setFont(new Font("Verdana", Font.PLAIN, 12));
 
         JPanel text = new JPanel();
@@ -107,47 +121,62 @@ public class ConverterGUI extends JFrame {
         text.add(Box.createVerticalStrut(5));
         text.add(subtitle);
 
-        header.add(text, BorderLayout.WEST);
-        return header;
+        inner.add(text, BorderLayout.WEST);
+        wrapper.add(inner, BorderLayout.CENTER);
+        return wrapper;
     }
 
     private JPanel createMenuPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(245, 247, 249));
-        panel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 96));
+        menuPanel = new JPanel(new GridLayout(0, 7, 10, 8));
+        menuPanel.setBackground(PANEL_BACKGROUND);
+        menuPanel.setBorder(BorderFactory.createEmptyBorder(18, 22, 18, 22));
+        menuPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 92));
+        menuPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return menuPanel;
+    }
 
-        String[] labels = {
-                "Area", "Fuerza", "Temperatura", "Longitud", "Masa",
-                "Potencia", "Volumen", "Energia", "Presion", "Moneda",
-                "Tiempo", "Velocidad", "Densidad", "Caudal"
-        };
+    private void refreshMenuLinks() {
+        menuPanel.removeAll();
+        categoryLinkButtons.clear();
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 14, 4, 14);
-        gbc.anchor = GridBagConstraints.WEST;
-
-        for (int i = 0; i < labels.length; i++) {
-            gbc.gridx = i % 7;
-            gbc.gridy = i / 7;
-
-            JLabel label = new JLabel(labels[i]);
-            label.setForeground(BLUE);
-            label.setFont(new Font("Verdana", Font.BOLD, 12));
-            panel.add(label, gbc);
+        for (CategoryInfo category : loadedCategories) {
+            JButton linkButton = createCategoryLinkButton(category);
+            categoryLinkButtons.put(category.getCode(), linkButton);
+            menuPanel.add(linkButton);
         }
 
-        return panel;
+        syncCategoryLinks();
+        menuPanel.revalidate();
+        menuPanel.repaint();
+    }
+
+    private JButton createCategoryLinkButton(CategoryInfo category) {
+        JButton button = new JButton(category.getLabel());
+        button.setFont(new Font("Verdana", Font.BOLD, 12));
+        button.setForeground(BLUE);
+        button.setBackground(PANEL_BACKGROUND);
+        button.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.setOpaque(true);
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        button.addActionListener(e -> selectCategory(category.getCode()));
+        return button;
     }
 
     private JPanel createConverterPanel() {
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(PAGE_BACKGROUND);
+        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 205));
+        wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(new Color(241, 241, 241));
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(155, 203, 255)),
-                BorderFactory.createEmptyBorder(16, 16, 16, 16)
+                BorderFactory.createEmptyBorder(18, 18, 18, 18)
         ));
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 190));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
@@ -158,7 +187,7 @@ public class ConverterGUI extends JFrame {
         section.setFont(new Font("Verdana", Font.BOLD, 18));
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 5;
+        gbc.gridwidth = 6;
         panel.add(section, gbc);
 
         gbc.gridwidth = 1;
@@ -166,16 +195,18 @@ public class ConverterGUI extends JFrame {
 
         categoryCombo = new JComboBox<>();
         categoryCombo.setFont(new Font("Verdana", Font.PLAIN, 12));
-        categoryCombo.addActionListener(e -> updateUnitCombos());
-
+        categoryCombo.addActionListener(e -> {
+            updateUnitCombos();
+            syncCategoryLinks();
+        });
         gbc.gridx = 0;
-        gbc.weightx = 0.7;
+        gbc.weightx = 0.55;
         panel.add(categoryCombo, gbc);
 
         valueField = new JTextField("100");
         valueField.setFont(new Font("Verdana", Font.PLAIN, 13));
         gbc.gridx = 1;
-        gbc.weightx = 0.7;
+        gbc.weightx = 0.25;
         panel.add(valueField, gbc);
 
         fromUnitCombo = new JComboBox<>();
@@ -184,8 +215,9 @@ public class ConverterGUI extends JFrame {
         gbc.weightx = 1.0;
         panel.add(fromUnitCombo, gbc);
 
-        JButton swapButton = new JButton(">");
+        JButton swapButton = new JButton("⇄");
         swapButton.setToolTipText("Intercambiar unidades");
+        swapButton.setFont(new Font("Dialog", Font.BOLD, 14));
         swapButton.addActionListener(e -> swapUnits());
         gbc.gridx = 3;
         gbc.weightx = 0;
@@ -197,43 +229,46 @@ public class ConverterGUI extends JFrame {
         gbc.weightx = 1.0;
         panel.add(toUnitCombo, gbc);
 
+        JButton convertButton = new JButton("Convertir");
+        convertButton.setFont(new Font("Verdana", Font.BOLD, 13));
+        convertButton.addActionListener(e -> convert());
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 0;
+        panel.add(convertButton, gbc);
+
         resultField = new JTextField();
         resultField.setEditable(false);
         resultField.setFont(new Font("Verdana", Font.BOLD, 13));
-        resultField.setBackground(new Color(250, 250, 250));
-
+        resultField.setBackground(Color.WHITE);
         gbc.gridx = 1;
         gbc.gridy = 2;
         gbc.gridwidth = 4;
         gbc.weightx = 1.0;
         panel.add(resultField, gbc);
 
-        JButton convertButton = new JButton("Convertir");
-        convertButton.setBackground(BLUE);
-        convertButton.setForeground(Color.BLACK);
-        convertButton.setFont(new Font("Verdana", Font.BOLD, 13));
-        convertButton.addActionListener(e -> convert());
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridwidth = 1;
-        gbc.weightx = 0;
-        panel.add(convertButton, gbc);
-
         valueField.addActionListener(e -> convert());
 
-        return panel;
+        wrapper.add(panel, BorderLayout.CENTER);
+        return wrapper;
     }
 
     private JPanel createHistoryPanel() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(BLUE),
-                "Historial de conversiones"
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(155, 203, 255)),
+                BorderFactory.createEmptyBorder(12, 12, 12, 12)
         ));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        historyArea = new JTextArea(12, 65);
+        JLabel title = new JLabel("Historial de conversiones");
+        title.setForeground(BLUE);
+        title.setFont(new Font("Verdana", Font.BOLD, 14));
+        panel.add(title, BorderLayout.NORTH);
+
+        historyArea = new JTextArea(9, 70);
         historyArea.setEditable(false);
         historyArea.setFont(new Font("Consolas", Font.PLAIN, 13));
         historyArea.setBackground(new Color(250, 250, 250));
@@ -241,7 +276,7 @@ public class ConverterGUI extends JFrame {
         panel.add(new JScrollPane(historyArea), BorderLayout.CENTER);
 
         JPanel buttons = new JPanel();
-        buttons.setBackground(Color.WHITE);
+        buttons.setOpaque(false);
 
         JButton clearButton = new JButton("Limpiar historial");
         clearButton.addActionListener(e -> historyArea.setText(""));
@@ -260,10 +295,15 @@ public class ConverterGUI extends JFrame {
         try {
             CatalogResponse catalog = stub.getCatalog(CatalogRequest.newBuilder().build());
 
+            loadedCategories.clear();
+            loadedCategories.addAll(catalog.getCategoriesList());
+
             categoryCombo.removeAllItems();
-            for (CategoryInfo category : catalog.getCategoriesList()) {
+            for (CategoryInfo category : loadedCategories) {
                 categoryCombo.addItem(new CategoryOption(category));
             }
+
+            refreshMenuLinks();
 
             statusLabel.setText("Catalogo cargado desde el servidor gRPC");
             statusLabel.setForeground(new Color(39, 174, 96));
@@ -297,6 +337,33 @@ public class ConverterGUI extends JFrame {
 
         selectUnit(fromUnitCombo, category.getDefaultFromUnit());
         selectUnit(toUnitCombo, category.getDefaultToUnit());
+    }
+
+    private void selectCategory(String categoryCode) {
+        for (int i = 0; i < categoryCombo.getItemCount(); i++) {
+            CategoryOption option = categoryCombo.getItemAt(i);
+            if (option.category().getCode().equalsIgnoreCase(categoryCode)) {
+                categoryCombo.setSelectedIndex(i);
+                syncCategoryLinks();
+                return;
+            }
+        }
+    }
+
+    private void syncCategoryLinks() {
+        CategoryOption selected = (CategoryOption) categoryCombo.getSelectedItem();
+        String activeCode = selected == null ? "" : selected.category().getCode();
+
+        for (Map.Entry<String, JButton> entry : categoryLinkButtons.entrySet()) {
+            JButton button = entry.getValue();
+            boolean active = entry.getKey().equalsIgnoreCase(activeCode);
+
+            button.setForeground(active ? DARK_BLUE : BLUE);
+            button.setBackground(active ? ACTIVE_LINK_BG : PANEL_BACKGROUND);
+            button.setBorder(active
+                    ? BorderFactory.createLineBorder(new Color(180, 210, 240))
+                    : BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        }
     }
 
     private void selectUnit(JComboBox<UnitOption> combo, String code) {
