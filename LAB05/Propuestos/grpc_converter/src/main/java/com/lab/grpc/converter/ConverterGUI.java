@@ -70,34 +70,38 @@ public class ConverterGUI extends JFrame {
     private void initUI() {
         setTitle("Conversor de Unidades gRPC");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1040, 690);
+        setSize(1180, 720);
+        setMinimumSize(new Dimension(980, 650));
         setLocationRelativeTo(null);
         setResizable(true);
 
-        JPanel page = new JPanel();
-        page.setLayout(new BoxLayout(page, BoxLayout.Y_AXIS));
-        page.setBackground(PAGE_BACKGROUND);
-        page.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 0));
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBackground(PAGE_BACKGROUND);
 
-        page.add(createHeader());
-        page.add(Box.createVerticalStrut(14));
-        page.add(createMenuPanel());
-        page.add(Box.createVerticalStrut(16));
-        page.add(createConverterPanel());
-        page.add(Box.createVerticalStrut(14));
-        page.add(createHistoryPanel());
-        page.add(Box.createVerticalStrut(8));
+        root.add(createHeader(), BorderLayout.NORTH);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(PAGE_BACKGROUND);
+        content.setBorder(BorderFactory.createEmptyBorder(14, 14, 12, 14));
+
+        content.add(createMenuPanel());
+        content.add(Box.createVerticalStrut(14));
+        content.add(createConverterPanel());
+        content.add(Box.createVerticalStrut(14));
+        content.add(createHistoryPanel());
+        content.add(Box.createVerticalStrut(8));
 
         statusLabel = new JLabel("Conectando con servidor gRPC en localhost:50051");
         statusLabel.setFont(new Font("Verdana", Font.ITALIC, 11));
         statusLabel.setForeground(BLUE);
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 0));
         statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        page.add(statusLabel);
+        content.add(statusLabel);
 
-        add(page);
+        root.add(content, BorderLayout.CENTER);
+
+        setContentPane(root);
     }
-
     private JPanel createHeader() {
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setBackground(BLUE);
@@ -106,7 +110,7 @@ public class ConverterGUI extends JFrame {
 
         JPanel inner = new JPanel(new BorderLayout());
         inner.setOpaque(false);
-        inner.setBorder(BorderFactory.createEmptyBorder(12, 22, 12, 22));
+        inner.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
 
         JLabel title = new JLabel("Conversor de Unidades .gRPC");
         title.setForeground(Color.WHITE);
@@ -170,6 +174,7 @@ public class ConverterGUI extends JFrame {
     private JPanel createConverterPanel() {
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setBackground(PAGE_BACKGROUND);
+        wrapper.setPreferredSize(new Dimension(1000, 230));
         wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 230));
         wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -343,6 +348,7 @@ public class ConverterGUI extends JFrame {
                 BorderFactory.createLineBorder(new Color(155, 203, 255)),
                 BorderFactory.createEmptyBorder(12, 12, 12, 12)
         ));
+        panel.setPreferredSize(new Dimension(1000, 300));
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
