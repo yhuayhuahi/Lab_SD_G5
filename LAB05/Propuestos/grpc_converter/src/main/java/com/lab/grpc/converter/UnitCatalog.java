@@ -35,11 +35,26 @@ public final class UnitCatalog {
         UnitDefinition to = category.findUnit(toUnitCode)
                 .orElseThrow(() -> new IllegalArgumentException("Unidad destino no encontrada: " + toUnitCode));
 
+        ConversionValidator.validateGeneralValue(category.getCode(), from.getCode(), value);
+
         if ("temperatura".equalsIgnoreCase(category.getCode())) {
             return convertTemperature(from.getCode(), to.getCode(), value);
         }
 
         return value * from.getFactorToBase() / to.getFactorToBase();
+    }
+
+    public static String describe(String categoryCode, String fromUnitCode, String toUnitCode, double value, double result) {
+        UnitCategory category = findCategory(categoryCode)
+                .orElseThrow(() -> new IllegalArgumentException("Categoria no encontrada: " + categoryCode));
+
+        UnitDefinition from = category.findUnit(fromUnitCode)
+                .orElseThrow(() -> new IllegalArgumentException("Unidad origen no encontrada: " + fromUnitCode));
+
+        UnitDefinition to = category.findUnit(toUnitCode)
+                .orElseThrow(() -> new IllegalArgumentException("Unidad destino no encontrada: " + toUnitCode));
+
+        return String.format("%.6f %s = %.6f %s", value, from.getCode(), result, to.getCode());
     }
 
     private static double convertTemperature(String from, String to, double value) {
@@ -160,6 +175,12 @@ public final class UnitCatalog {
                 new UnitDefinition("F", "Fahrenheit (F)", 1.0),
                 new UnitDefinition("K", "Kelvin (K)", 1.0),
                 new UnitDefinition("R", "Rankine (R)", 1.0)
+        )));
+
+        categories.add(new UnitCategory("moneda", "Moneda", "PEN", "USD", List.of(
+                new UnitDefinition("PEN", "Sol peruano (PEN)", 1.0),
+                new UnitDefinition("USD", "Dolar estadounidense (USD)", 3.70),
+                new UnitDefinition("EUR", "Euro (EUR)", 4.00)
         )));
 
         return List.copyOf(categories);
