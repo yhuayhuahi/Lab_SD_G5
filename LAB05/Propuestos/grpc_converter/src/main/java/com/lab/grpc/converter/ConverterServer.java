@@ -1,20 +1,18 @@
-package com.lab.grpc.converter;
+﻿package com.lab.grpc.converter;
 
 import java.io.IOException; 
 import java.util.logging.Logger; // logger para imprimir mensajes de estado en el servidor
 
-import com.lab.grpc.converter.ConverterProto.ConvertRequest; // importan las clases generadas por protoc a partir del .proto
-import com.lab.grpc.converter.ConverterProto.ConvertResponse;
 
 import io.grpc.Server; // clases de gRPC para crear el servidor y manejar las conexiones
 import io.grpc.ServerBuilder; // configura y construye el servidor gRPC
-import io.grpc.stub.StreamObserver; // i para enviar respuestas asíncronas a los clientes desde el servidor
+import io.grpc.stub.StreamObserver; // i para enviar respuestas asÃ­ncronas a los clientes desde el servidor
 
 public class ConverterServer {
 
     private static final Logger logger = Logger.getLogger(ConverterServer.class.getName());
 
-    private static final int PORT = 50051; // puerto en q escuchará el servidor
+    private static final int PORT = 50051; // puerto en q escucharÃ¡ el servidor
 
     private static final double TASA_SOL_USD = 0.27; // tasa como valor constante
 
@@ -30,7 +28,7 @@ public class ConverterServer {
 
         logger.info("Servidor gRPC iniciado en puerto " + PORT);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> { // cuando se recibe una señal como ctrlc
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> { // cuando se recibe una seÃ±al como ctrlc
             logger.info("Apagando servidor...");
             ConverterServer.this.stop();
         }));
@@ -61,7 +59,7 @@ public class ConverterServer {
 
         @Override
         public void convert(ConvertRequest req, StreamObserver<ConvertResponse> obs) { // maneja solicitudes de conversion
-            // streamobserver se usa para enviar la respuesta de forma asíncrona al cliente, el servidor puede procesar otras solicitudes mientras espera enviar la respuesta a este cliente
+            // streamobserver se usa para enviar la respuesta de forma asÃ­ncrona al cliente, el servidor puede procesar otras solicitudes mientras espera enviar la respuesta a este cliente
             String tipo = req.getType().trim().toLowerCase();
 
             double valor = req.getValue();
@@ -72,7 +70,7 @@ public class ConverterServer {
 
             if (Double.isNaN(valor) || Double.isInfinite(valor)) { 
 
-                resp = error("Número inválido.");
+                resp = error("NÃºmero invÃ¡lido.");
 
                 obs.onNext(resp); // envia la respuesta de error al cliente
                 obs.onCompleted(); // completa y termina la comunicacion
@@ -85,23 +83,23 @@ public class ConverterServer {
 
                 case "celsius_fahrenheit":
                     resp = ok(valor * 1.8 + 32,
-                            String.format("%.2f °C = %.2f °F", valor, valor * 1.8 + 32));
+                            String.format("%.2f Â°C = %.2f Â°F", valor, valor * 1.8 + 32));
                     break;
 
                 case "fahrenheit_celsius":
                     resp = ok((valor - 32) / 1.8,
-                            String.format("%.2f °F = %.2f °C", valor, (valor - 32) / 1.8));
+                            String.format("%.2f Â°F = %.2f Â°C", valor, (valor - 32) / 1.8));
                     break;
 
                 case "celsius_kelvin":
 
                     if (valor < -273.15) { // kelvin no puede ser negativo
-                        resp = error("No existe temperatura menor a -273.15 °C");
+                        resp = error("No existe temperatura menor a -273.15 Â°C");
                         break;
                     }
 
                     resp = ok(valor + 273.15,
-                            String.format("%.2f °C = %.2f K", valor, valor + 273.15));
+                            String.format("%.2f Â°C = %.2f K", valor, valor + 273.15));
                     break;
 
                 case "kelvin_celsius":
@@ -112,20 +110,20 @@ public class ConverterServer {
                     }
 
                     resp = ok(valor - 273.15,
-                            String.format("%.2f K = %.2f °C", valor, valor - 273.15));
+                            String.format("%.2f K = %.2f Â°C", valor, valor - 273.15));
                     break;
 
                 case "fahrenheit_kelvin":
 
-                    if (valor < -459.67) { // temperatura más baja posible en Fahrenheit
-                        resp = error("No existe temperatura menor a -459.67 °F");
+                    if (valor < -459.67) { // temperatura mÃ¡s baja posible en Fahrenheit
+                        resp = error("No existe temperatura menor a -459.67 Â°F");
                         break;
                     }
 
                     double fk = (valor - 32) / 1.8 + 273.15;
 
                     resp = ok(fk,
-                            String.format("%.2f °F = %.2f K", valor, fk));
+                            String.format("%.2f Â°F = %.2f K", valor, fk));
                     break;
 
                 case "kelvin_fahrenheit":
@@ -138,7 +136,7 @@ public class ConverterServer {
                     double kf = (valor - 273.15) * 1.8 + 32;
 
                     resp = ok(kf,
-                            String.format("%.2f K = %.2f °F", valor, kf));
+                            String.format("%.2f K = %.2f Â°F", valor, kf));
                     break;
 
                 // MONEDA
@@ -258,7 +256,7 @@ public class ConverterServer {
                     break;
 
                 default:
-                    resp = error("Tipo de conversión desconocido");
+                    resp = error("Tipo de conversiÃ³n desconocido");
             }
 
             logger.info("[RESPUESTA] " +
@@ -269,7 +267,7 @@ public class ConverterServer {
             obs.onCompleted();
         }
 
-        private ConvertResponse ok(double resultado, String descripcion) { // respuesta success con el resultado y la descripción 
+        private ConvertResponse ok(double resultado, String descripcion) { // respuesta success con el resultado y la descripciÃ³n 
 
             return ConvertResponse.newBuilder()
                     .setResult(resultado)
