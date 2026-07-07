@@ -10,7 +10,7 @@ public final class ConversionValidator {
             throw new IllegalArgumentException("El valor ingresado no es finito.");
         }
 
-        if (isTemperature(categoryCode)) {
+        if ("temperatura".equalsIgnoreCase(categoryCode)) {
             validateTemperature(fromUnitCode, value);
             return;
         }
@@ -18,10 +18,6 @@ public final class ConversionValidator {
         if (value < 0) {
             throw new IllegalArgumentException("No se permiten valores negativos para esta categoria.");
         }
-    }
-
-    private static boolean isTemperature(String categoryCode) {
-        return "temperatura".equalsIgnoreCase(categoryCode);
     }
 
     private static void validateTemperature(String fromUnitCode, double value) {
