@@ -1,4 +1,4 @@
-package com.lab.grpc.converter;
+﻿package com.lab.grpc.converter;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -25,8 +25,6 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import com.lab.grpc.converter.ConverterGrpc;
-import com.lab.grpc.converter.ConverterProto;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -44,12 +42,12 @@ public class ConverterGUI extends JFrame {
 
     public ConverterGUI() {
         channel = ManagedChannelBuilder.forAddress("localhost", 50051).usePlaintext().build(); // se conecta al servidor
-        stub = ConverterGrpc.newBlockingStub(channel); // stub bloqueante para hacer llamadas al servidor, es bloqueante porque el cliente esperará la respuesta del servidor antes de continuar
+        stub = ConverterGrpc.newBlockingStub(channel); // stub bloqueante para hacer llamadas al servidor, es bloqueante porque el cliente esperarÃ¡ la respuesta del servidor antes de continuar
         initUI(); // inicializa la interfaz 
     }
 
     private void initUI() {
-        setTitle("Sistema de Conversión");
+        setTitle("Sistema de ConversiÃ³n");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(580, 620);
         setLocationRelativeTo(null);
@@ -60,8 +58,8 @@ public class ConverterGUI extends JFrame {
         main.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         main.setBackground(new Color(245, 245, 250));
 
-        // Título
-        JLabel titulo = new JLabel("Sistema de Conversión gRPC", SwingConstants.CENTER);
+        // TÃ­tulo
+        JLabel titulo = new JLabel("Sistema de ConversiÃ³n gRPC", SwingConstants.CENTER);
         titulo.setFont(new Font("Arial", Font.BOLD, 20));
         titulo.setForeground(new Color(33, 97, 140));
         titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -72,7 +70,7 @@ public class ConverterGUI extends JFrame {
         JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBackground(Color.WHITE);
         inputPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(33, 97, 140)), "Parámetros de Conversión")); // panel con borde titulado para los parámetros de conversión
+                BorderFactory.createLineBorder(new Color(33, 97, 140)), "ParÃ¡metros de ConversiÃ³n")); // panel con borde titulado para los parÃ¡metros de conversiÃ³n
         inputPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -82,7 +80,7 @@ public class ConverterGUI extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 0;
-        inputPanel.add(new JLabel("Tipo de conversión:"), gbc);
+        inputPanel.add(new JLabel("Tipo de conversiÃ³n:"), gbc);
 
         tipoCombo = new JComboBox<>(new String[]{
             "celsius_fahrenheit",
@@ -159,49 +157,50 @@ public class ConverterGUI extends JFrame {
 
         add(main);
 
-        btnConvertir.addActionListener(e -> convertir()); // al hacer clic en el botón convertir se llama al método convertir() que envía la solicitud al servidor gRPC y muestra el resultado en el área de texto
+        btnConvertir.addActionListener(e -> convertir()); // al hacer clic en el botÃ³n convertir se llama al mÃ©todo convertir() que envÃ­a la solicitud al servidor gRPC y muestra el resultado en el Ã¡rea de texto
         valorField.addActionListener(e -> convertir());
     }
 
     private void convertir() {
-        String tipo = (String) tipoCombo.getSelectedItem(); // obtiene el tipo de conversión seleccionado en el combo box, es un string como "celsius_fahrenheit"
+        String tipo = (String) tipoCombo.getSelectedItem(); // obtiene el tipo de conversiÃ³n seleccionado en el combo box, es un string como "celsius_fahrenheit"
         double valor;
-        try { // si el valor ingresado no es un número válido muestra un mensaje de error y no hace la solicitud al servidor
+        try { // si el valor ingresado no es un nÃºmero vÃ¡lido muestra un mensaje de error y no hace la solicitud al servidor
             valor = Double.parseDouble(valorField.getText().trim());
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Ingresa un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Ingresa un nÃºmero vÃ¡lido.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        ConverterProto.ConvertRequest req = ConverterProto.ConvertRequest.newBuilder() // crea la solicitud de conversión con el tipo y valor ingresados, es un mensaje protobuf que se enviará al servidor gRPC
+        ConvertRequest req = ConvertRequest.newBuilder() // crea la solicitud de conversiÃ³n con el tipo y valor ingresados, es un mensaje protobuf que se enviarÃ¡ al servidor gRPC
                 .setType(tipo).setValue(valor).build();
 
         long inicio = System.currentTimeMillis(); // para medir el tiempo de respuesta del servidor, se obtiene el tiempo actual en milisegundos antes de hacer la solicitud al servidor gRPC
         try {
-            ConverterProto.ConvertResponse resp = stub.convert(req); // stub bloqueante hace la llamada al servidor con la solicitud de conversión y espera la respuesta, es un mensaje protobuf que contiene el resultado de la conversión o un mensaje de error
-            long ms = System.currentTimeMillis() - inicio; // calcula el tiempo que tardó la respuesta del servidor restando el tiempo actual al tiempo de inicio, esto se muestra en la interfaz gráfica para que el usuario vea cuánto tardó la conversión
+            ConvertResponse resp = stub.convert(req); // stub bloqueante hace la llamada al servidor con la solicitud de conversiÃ³n y espera la respuesta, es un mensaje protobuf que contiene el resultado de la conversiÃ³n o un mensaje de error
+            long ms = System.currentTimeMillis() - inicio; // calcula el tiempo que tardÃ³ la respuesta del servidor restando el tiempo actual al tiempo de inicio, esto se muestra en la interfaz grÃ¡fica para que el usuario vea cuÃ¡nto tardÃ³ la conversiÃ³n
             if (resp.getSuccess()) {
-                resultArea.append("✓ " + resp.getDescription() + "\n"); // append para agregar texto al área de resultados, muestra la descripción de la conversión realizada, por ejemplo "100.0 Celsius = 212.0 Fahrenheit"
+                resultArea.append("âœ“ " + resp.getDescription() + "\n"); // append para agregar texto al Ã¡rea de resultados, muestra la descripciÃ³n de la conversiÃ³n realizada, por ejemplo "100.0 Celsius = 212.0 Fahrenheit"
                 resultArea.append("  Resultado: " + String.format("%.6f", resp.getResult())
                         + "  |  Tiempo: " + ms + " ms\n");
-                resultArea.append("─────────────────────────────────\n");
-                statusLabel.setText("OK - última consulta: " + ms + " ms"); // muestra en el status que la última consulta fue exitosa y el tiempo que tardó
+                resultArea.append("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n");
+                statusLabel.setText("OK - Ãºltima consulta: " + ms + " ms"); // muestra en el status que la Ãºltima consulta fue exitosa y el tiempo que tardÃ³
                 statusLabel.setForeground(new Color(39, 174, 96));
             } else {
-                resultArea.append("✗ ERROR: " + resp.getErrorMessage() + "\n");
-                resultArea.append("─────────────────────────────────\n");
-                statusLabel.setText("Error en la conversión");
+                resultArea.append("âœ— ERROR: " + resp.getErrorMessage() + "\n");
+                resultArea.append("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n");
+                statusLabel.setText("Error en la conversiÃ³n");
                 statusLabel.setForeground(Color.RED);
             }
         } catch (StatusRuntimeException ex) {
-            resultArea.append("✗ ERROR DE RED: " + ex.getStatus() + "\n");
-            statusLabel.setText("Sin conexión con el servidor");
+            resultArea.append("âœ— ERROR DE RED: " + ex.getStatus() + "\n");
+            statusLabel.setText("Sin conexiÃ³n con el servidor");
             statusLabel.setForeground(Color.RED);
         }
     }
 
     public static void main(String[] args) throws Exception {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); // 
-        SwingUtilities.invokeLater(() -> new ConverterGUI().setVisible(true)); // para iniciar la interfaz gráfica en el hilo de eventos de Swing, se crea una instancia de ConverterGUI y se hace visible
+        SwingUtilities.invokeLater(() -> new ConverterGUI().setVisible(true)); // para iniciar la interfaz grÃ¡fica en el hilo de eventos de Swing, se crea una instancia de ConverterGUI y se hace visible
     }
 }
+
