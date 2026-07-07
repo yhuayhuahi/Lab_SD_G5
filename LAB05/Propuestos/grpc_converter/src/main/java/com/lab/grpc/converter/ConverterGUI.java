@@ -8,6 +8,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JEditorPane;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -55,6 +56,7 @@ public class ConverterGUI extends JFrame {
     private JTextField valueField;
     private JTextField resultField;
     private JTextArea historyArea;
+    private JEditorPane symbolPane;
     private JLabel statusLabel;
 
     public ConverterGUI() {
@@ -68,7 +70,7 @@ public class ConverterGUI extends JFrame {
     private void initUI() {
         setTitle("Conversor de Unidades gRPC");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1040, 620);
+        setSize(1040, 690);
         setLocationRelativeTo(null);
         setResizable(false);
 
@@ -92,8 +94,6 @@ public class ConverterGUI extends JFrame {
         statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 0));
         statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         page.add(statusLabel);
-        page.add(Box.createVerticalStrut(10));
-        page.add(createFooter());
 
         add(page);
     }
@@ -256,26 +256,48 @@ public class ConverterGUI extends JFrame {
     }
 
     private JPanel createHistoryPanel() {
-        JPanel panel = new JPanel(new BorderLayout(8, 8));
+        JPanel panel = new JPanel(new BorderLayout(12, 8));
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(155, 203, 255)),
                 BorderFactory.createEmptyBorder(12, 12, 12, 12)
         ));
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel title = new JLabel("Historial de conversiones");
-        title.setForeground(BLUE);
-        title.setFont(new Font("Verdana", Font.BOLD, 14));
-        panel.add(title, BorderLayout.NORTH);
+        JPanel symbolsPanel = new JPanel(new BorderLayout(6, 6));
+        symbolsPanel.setBackground(Color.WHITE);
+        symbolsPanel.setPreferredSize(new Dimension(330, 260));
+        symbolsPanel.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
 
-        historyArea = new JTextArea(9, 70);
+        JLabel symbolsTitle = new JLabel("Simbolo de las unidades", SwingConstants.CENTER);
+        symbolsTitle.setForeground(BLUE);
+        symbolsTitle.setFont(new Font("Verdana", Font.PLAIN, 16));
+
+        symbolPane = new JEditorPane();
+        symbolPane.setContentType("text/html");
+        symbolPane.setEditable(false);
+        symbolPane.setOpaque(false);
+        symbolPane.setFont(new Font("Verdana", Font.PLAIN, 12));
+        symbolPane.setText("<html><body style='font-family:Verdana;font-size:11px;'>Seleccione una categoria.</body></html>");
+
+        symbolsPanel.add(symbolsTitle, BorderLayout.NORTH);
+        symbolsPanel.add(symbolPane, BorderLayout.CENTER);
+
+        JPanel historyPanel = new JPanel(new BorderLayout(8, 8));
+        historyPanel.setBackground(Color.WHITE);
+
+        JLabel historyTitle = new JLabel("Historial de conversiones");
+        historyTitle.setForeground(BLUE);
+        historyTitle.setFont(new Font("Verdana", Font.BOLD, 14));
+        historyPanel.add(historyTitle, BorderLayout.NORTH);
+
+        historyArea = new JTextArea(13, 70);
         historyArea.setEditable(false);
         historyArea.setFont(new Font("Consolas", Font.PLAIN, 13));
         historyArea.setBackground(new Color(250, 250, 250));
 
-        panel.add(new JScrollPane(historyArea), BorderLayout.CENTER);
+        historyPanel.add(new JScrollPane(historyArea), BorderLayout.CENTER);
 
         JPanel buttons = new JPanel();
         buttons.setOpaque(false);
@@ -289,10 +311,13 @@ public class ConverterGUI extends JFrame {
         buttons.add(clearButton);
         buttons.add(resetButton);
 
-        panel.add(buttons, BorderLayout.SOUTH);
+        historyPanel.add(buttons, BorderLayout.SOUTH);
+
+        panel.add(symbolsPanel, BorderLayout.WEST);
+        panel.add(historyPanel, BorderLayout.CENTER);
+
         return panel;
     }
-
     private void loadCatalog() {
         try {
             CatalogResponse catalog = stub.getCatalog(CatalogRequest.newBuilder().build());
@@ -339,6 +364,54 @@ public class ConverterGUI extends JFrame {
 
         selectUnit(fromUnitCombo, category.getDefaultFromUnit());
         selectUnit(toUnitCombo, category.getDefaultToUnit());
+        updateSymbols(category);
+    }
+
+    private void updateSymbols(CategoryInfo category) {
+        if (symbolPane == null || category == null) {
+            return;
+        }
+
+        StringBuilder html = new StringBuilder();
+        html.append("<html><body style='font-family:Verdana;font-size:11px;margin:6px;'>");
+        html.append("<table width='100%'>");
+
+        int column = 0;
+        for (UnitInfo unit : category.getUnitsList()) {
+            if (column == 0) {
+                html.append("<tr>");
+            }
+
+            String code = unit.getCode();
+            String label = unit.getLabel();
+
+            int parenthesisIndex = label.indexOf(" (");
+            if (parenthesisIndex > 0) {
+                label = label.substring(0, parenthesisIndex);
+            }
+
+            html.append("<td style='padding:4px 10px 4px 0; vertical-align:top;'>");
+            html.append("<b>").append(code).append("</b>, ");
+            html.append(label);
+            html.append("</td>");
+
+            column++;
+
+            if (column == 2) {
+                html.append("</tr>");
+                column = 0;
+            }
+        }
+
+        if (column != 0) {
+            html.append("</tr>");
+        }
+
+        html.append("</table>");
+        html.append("</body></html>");
+
+        symbolPane.setText(html.toString());
+        symbolPane.setCaretPosition(0);
     }
 
     private void selectCategory(String categoryCode) {
@@ -448,26 +521,6 @@ public class ConverterGUI extends JFrame {
         }
     }
 
-
-    private JPanel createFooter() {
-        JPanel footer = new JPanel(new BorderLayout());
-        footer.setBackground(new Color(230, 233, 239));
-        footer.setBorder(BorderFactory.createEmptyBorder(14, 18, 14, 18));
-        footer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 78));
-        footer.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel left = new JLabel("Conversor de unidades distribuido con gRPC");
-        left.setFont(new Font("Verdana", Font.PLAIN, 11));
-        left.setForeground(new Color(90, 90, 90));
-
-        JLabel right = new JLabel("Laboratorio 05 · Sistemas Distribuidos · UNSA", SwingConstants.RIGHT);
-        right.setFont(new Font("Verdana", Font.PLAIN, 11));
-        right.setForeground(new Color(120, 120, 120));
-
-        footer.add(left, BorderLayout.WEST);
-        footer.add(right, BorderLayout.EAST);
-        return footer;
-    }
 
     @Override
     public void dispose() {
