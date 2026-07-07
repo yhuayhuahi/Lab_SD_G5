@@ -10,18 +10,19 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontFormatException;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.rmi.Naming;
 import java.text.DecimalFormat;
 
@@ -31,12 +32,13 @@ public class CalculatorGUI extends JFrame {
     private static final Color BODY_DARK = new Color(28, 31, 36);
     private static final Color LCD = new Color(178, 194, 164);
     private static final Color LCD_DARK = new Color(56, 71, 56);
-    private static final Color KEY = new Color(82, 88, 98);
-    private static final Color KEY_HOVER = new Color(104, 112, 126);
-    private static final Color KEY_PRESS = new Color(58, 63, 71);
-    private static final Color OPERATOR = new Color(66, 73, 83);
-    private static final Color RED_KEY = new Color(157, 38, 62);
-    private static final Color RED_KEY_HOVER = new Color(185, 55, 82);
+    private static final Color KEY = new Color(78, 86, 98);
+    private static final Color KEY_HOVER = new Color(104, 114, 130);
+    private static final Color KEY_PRESS = new Color(48, 54, 63);
+    private static final Color OPERATOR = new Color(92, 100, 112);
+    private static final Color OPERATOR_HOVER = new Color(120, 130, 145);
+    private static final Color RED_KEY = new Color(166, 35, 65);
+    private static final Color RED_KEY_HOVER = new Color(200, 55, 90);
 
     private final DecimalFormat decimalFormat = new DecimalFormat("0.##########");
 
@@ -50,18 +52,20 @@ public class CalculatorGUI extends JFrame {
     private boolean resetInput = false;
 
     public CalculatorGUI() {
-        connectToServer();
         initUI();
+        connectToServer();
     }
 
     private void connectToServer() {
         try {
             calculator = (Calculator) Naming.lookup(CalculatorServer.SERVICE_URL);
+            miniDisplay.setText("RPC CONNECTED");
         } catch (Exception ex) {
+            miniDisplay.setText("RPC OFFLINE");
             JOptionPane.showMessageDialog(
                     this,
                     "No se pudo conectar con el servidor RPC.\nPrimero ejecuta CalculatorServer.",
-                    "Error",
+                    "Error de conexion",
                     JOptionPane.ERROR_MESSAGE
             );
         }
@@ -86,33 +90,37 @@ public class CalculatorGUI extends JFrame {
     }
 
     private JPanel createHeader() {
-        JPanel panel = new JPanel(new BorderLayout(8, 8));
-        panel.setOpaque(false);
+        JPanel header = new JPanel(new BorderLayout(8, 10));
+        header.setOpaque(false);
 
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
 
         JLabel brand = new JLabel("CASIO");
-        brand.setForeground(new Color(220, 230, 235));
-        brand.setFont(new Font("Arial", Font.BOLD, 28));
+        brand.setForeground(new Color(235, 240, 245));
+        brand.setFont(new Font("Arial", Font.BOLD, 30));
 
         JLabel model = new JLabel("fx-RPC · Java RMI");
-        model.setForeground(new Color(220, 220, 220));
-        model.setFont(new Font("Arial", Font.PLAIN, 13));
+        model.setForeground(Color.WHITE);
+        model.setFont(new Font("Arial", Font.PLAIN, 14));
         model.setHorizontalAlignment(SwingConstants.RIGHT);
 
         top.add(brand, BorderLayout.WEST);
         top.add(model, BorderLayout.EAST);
 
         JPanel solar = new JPanel();
-        solar.setPreferredSize(new Dimension(160, 42));
-        solar.setBackground(new Color(77, 52, 42));
-        solar.setBorder(BorderFactory.createLineBorder(new Color(20, 20, 20), 3));
+        solar.setPreferredSize(new Dimension(165, 44));
+        solar.setBackground(new Color(75, 50, 42));
+        solar.setBorder(BorderFactory.createLineBorder(new Color(18, 18, 18), 4));
+
+        JPanel middle = new JPanel(new BorderLayout());
+        middle.setOpaque(false);
+        middle.add(solar, BorderLayout.EAST);
 
         JPanel displayPanel = new RoundedPanel(10, LCD);
         displayPanel.setLayout(new BorderLayout(4, 4));
-        displayPanel.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
-        displayPanel.setPreferredSize(new Dimension(370, 105));
+        displayPanel.setBorder(BorderFactory.createEmptyBorder(10, 14, 10, 14));
+        displayPanel.setPreferredSize(new Dimension(370, 112));
 
         miniDisplay = new JLabel("RPC READY");
         miniDisplay.setForeground(LCD_DARK);
@@ -120,20 +128,17 @@ public class CalculatorGUI extends JFrame {
 
         display = new JLabel("0");
         display.setHorizontalAlignment(SwingConstants.RIGHT);
-        display.setForeground(new Color(33, 44, 35));
+        display.setForeground(new Color(28, 39, 31));
         display.setFont(resolveDisplayFont());
 
         displayPanel.add(miniDisplay, BorderLayout.NORTH);
         displayPanel.add(display, BorderLayout.CENTER);
 
-        JPanel header = new JPanel(new BorderLayout(8, 8));
-        header.setOpaque(false);
         header.add(top, BorderLayout.NORTH);
-        header.add(solar, BorderLayout.EAST);
+        header.add(middle, BorderLayout.CENTER);
         header.add(displayPanel, BorderLayout.SOUTH);
 
-        panel.add(header, BorderLayout.CENTER);
-        return panel;
+        return header;
     }
 
     private Font resolveDisplayFont() {
@@ -172,36 +177,36 @@ public class CalculatorGUI extends JFrame {
         gbc.weightx = 1;
         gbc.weighty = 1;
 
-        addButton(keyboard, gbc, "x²", 0, 0, KEY, () -> unarySquare());
-        addButton(keyboard, gbc, "xʸ", 1, 0, KEY, () -> setOperation("pow"));
-        addButton(keyboard, gbc, "DEL", 2, 0, RED_KEY, () -> deleteLast());
-        addButton(keyboard, gbc, "AC", 3, 0, RED_KEY, () -> clearAll());
+        addButton(keyboard, gbc, "x²", 0, 0, KEY, KEY_HOVER, () -> unarySquare());
+        addButton(keyboard, gbc, "xʸ", 1, 0, KEY, KEY_HOVER, () -> setOperation("pow"));
+        addButton(keyboard, gbc, "DEL", 2, 0, RED_KEY, RED_KEY_HOVER, () -> deleteLast());
+        addButton(keyboard, gbc, "AC", 3, 0, RED_KEY, RED_KEY_HOVER, () -> clearAll());
 
-        addButton(keyboard, gbc, "7", 0, 1, KEY, () -> appendDigit("7"));
-        addButton(keyboard, gbc, "8", 1, 1, KEY, () -> appendDigit("8"));
-        addButton(keyboard, gbc, "9", 2, 1, KEY, () -> appendDigit("9"));
-        addButton(keyboard, gbc, "÷", 3, 1, OPERATOR, () -> setOperation("divide"));
+        addButton(keyboard, gbc, "7", 0, 1, KEY, KEY_HOVER, () -> appendDigit("7"));
+        addButton(keyboard, gbc, "8", 1, 1, KEY, KEY_HOVER, () -> appendDigit("8"));
+        addButton(keyboard, gbc, "9", 2, 1, KEY, KEY_HOVER, () -> appendDigit("9"));
+        addButton(keyboard, gbc, "÷", 3, 1, OPERATOR, OPERATOR_HOVER, () -> setOperation("divide"));
 
-        addButton(keyboard, gbc, "4", 0, 2, KEY, () -> appendDigit("4"));
-        addButton(keyboard, gbc, "5", 1, 2, KEY, () -> appendDigit("5"));
-        addButton(keyboard, gbc, "6", 2, 2, KEY, () -> appendDigit("6"));
-        addButton(keyboard, gbc, "×", 3, 2, OPERATOR, () -> setOperation("multiply"));
+        addButton(keyboard, gbc, "4", 0, 2, KEY, KEY_HOVER, () -> appendDigit("4"));
+        addButton(keyboard, gbc, "5", 1, 2, KEY, KEY_HOVER, () -> appendDigit("5"));
+        addButton(keyboard, gbc, "6", 2, 2, KEY, KEY_HOVER, () -> appendDigit("6"));
+        addButton(keyboard, gbc, "×", 3, 2, OPERATOR, OPERATOR_HOVER, () -> setOperation("multiply"));
 
-        addButton(keyboard, gbc, "1", 0, 3, KEY, () -> appendDigit("1"));
-        addButton(keyboard, gbc, "2", 1, 3, KEY, () -> appendDigit("2"));
-        addButton(keyboard, gbc, "3", 2, 3, KEY, () -> appendDigit("3"));
-        addButton(keyboard, gbc, "-", 3, 3, OPERATOR, () -> setOperation("subtract"));
+        addButton(keyboard, gbc, "1", 0, 3, KEY, KEY_HOVER, () -> appendDigit("1"));
+        addButton(keyboard, gbc, "2", 1, 3, KEY, KEY_HOVER, () -> appendDigit("2"));
+        addButton(keyboard, gbc, "3", 2, 3, KEY, KEY_HOVER, () -> appendDigit("3"));
+        addButton(keyboard, gbc, "-", 3, 3, OPERATOR, OPERATOR_HOVER, () -> setOperation("subtract"));
 
-        addButton(keyboard, gbc, "0", 0, 4, KEY, () -> appendDigit("0"));
-        addButton(keyboard, gbc, ".", 1, 4, KEY, () -> appendDecimal());
-        addButton(keyboard, gbc, "=", 2, 4, OPERATOR, () -> calculateResult());
-        addButton(keyboard, gbc, "+", 3, 4, OPERATOR, () -> setOperation("add"));
+        addButton(keyboard, gbc, "0", 0, 4, KEY, KEY_HOVER, () -> appendDigit("0"));
+        addButton(keyboard, gbc, ".", 1, 4, KEY, KEY_HOVER, () -> appendDecimal());
+        addButton(keyboard, gbc, "=", 2, 4, OPERATOR, OPERATOR_HOVER, () -> calculateResult());
+        addButton(keyboard, gbc, "+", 3, 4, OPERATOR, OPERATOR_HOVER, () -> setOperation("add"));
 
         return keyboard;
     }
 
-    private void addButton(JPanel panel, GridBagConstraints gbc, String text, int x, int y, Color baseColor, Runnable action) {
-        AnimatedCalcButton button = new AnimatedCalcButton(text, baseColor);
+    private void addButton(JPanel panel, GridBagConstraints gbc, String text, int x, int y, Color baseColor, Color hoverColor, Runnable action) {
+        AnimatedCalcButton button = new AnimatedCalcButton(text, baseColor, hoverColor);
         button.addActionListener(e -> action.run());
 
         gbc.gridx = x;
@@ -252,24 +257,27 @@ public class CalculatorGUI extends JFrame {
         firstOperand = null;
         pendingOperation = null;
         resetInput = false;
-        miniDisplay.setText("RPC READY");
+        miniDisplay.setText(calculator == null ? "RPC OFFLINE" : "RPC CONNECTED");
         updateDisplay();
     }
 
     private void setOperation(String operation) {
         try {
+            ensureConnected();
             firstOperand = parseCurrentInput();
             pendingOperation = operation;
             resetInput = true;
             miniDisplay.setText(format(firstOperand) + " " + symbolFor(operation));
-        } catch (NumberFormatException ex) {
-            showError("Entrada no valida.");
+        } catch (Exception ex) {
+            showError(ex.getMessage());
         }
     }
 
     private void unarySquare() {
         try {
+            ensureConnected();
             double value = parseCurrentInput();
+
             long start = System.nanoTime();
             double result = calculator.power(value, 2);
             long elapsedMs = (System.nanoTime() - start) / 1_000_000;
@@ -289,6 +297,7 @@ public class CalculatorGUI extends JFrame {
         }
 
         try {
+            ensureConnected();
             double secondOperand = parseCurrentInput();
 
             long start = System.nanoTime();
@@ -310,11 +319,17 @@ public class CalculatorGUI extends JFrame {
         }
     }
 
-    private double executeRemoteOperation(double a, double b, String operation) throws Exception {
+    private void ensureConnected() {
+        if (calculator == null) {
+            connectToServer();
+        }
+
         if (calculator == null) {
             throw new IllegalStateException("Servidor RPC no disponible.");
         }
+    }
 
+    private double executeRemoteOperation(double a, double b, String operation) throws Exception {
         return switch (operation) {
             case "add" -> calculator.add(a, b);
             case "subtract" -> calculator.subtract(a, b);
@@ -371,6 +386,7 @@ public class CalculatorGUI extends JFrame {
         @Override
         protected void paintComponent(Graphics graphics) {
             Graphics2D g2 = (Graphics2D) graphics.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setColor(color);
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
             g2.dispose();
@@ -382,54 +398,81 @@ public class CalculatorGUI extends JFrame {
 
         private final Color baseColor;
         private final Color hoverColor;
-        private final Color pressColor;
+        private final Color pressColor = KEY_PRESS;
 
-        AnimatedCalcButton(String text, Color baseColor) {
+        private Color currentColor;
+
+        AnimatedCalcButton(String text, Color baseColor, Color hoverColor) {
             super(text);
             this.baseColor = baseColor;
-            this.hoverColor = RED_KEY.equals(baseColor) ? RED_KEY_HOVER : KEY_HOVER;
-            this.pressColor = KEY_PRESS;
+            this.hoverColor = hoverColor;
+            this.currentColor = baseColor;
 
             setFont(new Font("Arial", Font.BOLD, 22));
             setForeground(Color.WHITE);
-            setBackground(baseColor);
-            setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(18, 18, 18), 2),
-                    BorderFactory.createEmptyBorder(8, 8, 8, 8)
-            ));
             setFocusPainted(false);
+            setBorderPainted(false);
+            setContentAreaFilled(false);
+            setOpaque(false);
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             setPreferredSize(new Dimension(78, 58));
 
             addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
                 public void mouseEntered(java.awt.event.MouseEvent e) {
-                    setBackground(hoverColor);
+                    currentColor = hoverColor;
+                    repaint();
                 }
 
                 @Override
                 public void mouseExited(java.awt.event.MouseEvent e) {
-                    setBackground(baseColor);
+                    currentColor = baseColor;
+                    repaint();
                 }
 
                 @Override
                 public void mousePressed(java.awt.event.MouseEvent e) {
-                    setBackground(pressColor);
+                    currentColor = pressColor;
+                    repaint();
                 }
 
                 @Override
                 public void mouseReleased(java.awt.event.MouseEvent e) {
-                    setBackground(hoverColor);
-                    Timer timer = new Timer(90, event -> setBackground(hoverColor));
+                    currentColor = hoverColor;
+                    repaint();
+
+                    Timer timer = new Timer(90, event -> {
+                        currentColor = hoverColor;
+                        repaint();
+                    });
                     timer.setRepeats(false);
                     timer.start();
                 }
             });
         }
+
+        @Override
+        protected void paintComponent(Graphics graphics) {
+            Graphics2D g2 = (Graphics2D) graphics.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(new Color(15, 17, 20));
+            g2.fillRoundRect(3, 4, getWidth() - 6, getHeight() - 5, 8, 8);
+
+            g2.setColor(currentColor);
+            g2.fillRoundRect(0, 0, getWidth() - 6, getHeight() - 8, 8, 8);
+
+            g2.setColor(new Color(180, 188, 198, 110));
+            g2.setStroke(new BasicStroke(1.4f));
+            g2.drawRoundRect(1, 1, getWidth() - 8, getHeight() - 10, 8, 8);
+
+            g2.dispose();
+            super.paintComponent(graphics);
+        }
     }
 
     public static void main(String[] args) throws Exception {
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
         SwingUtilities.invokeLater(() -> new CalculatorGUI().setVisible(true));
     }
 }
