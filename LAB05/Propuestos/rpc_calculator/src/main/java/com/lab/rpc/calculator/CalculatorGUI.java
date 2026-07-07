@@ -164,17 +164,21 @@ public class CalculatorGUI extends JFrame {
 
         JPanel displayPanel = new RoundedPanel(10, LCD);
         displayPanel.setLayout(new BorderLayout(4, 4));
-        displayPanel.setBorder(BorderFactory.createEmptyBorder(10, 14, 10, 14));
+        displayPanel.setBorder(BorderFactory.createEmptyBorder(10, 14, 10, 24));
         displayPanel.setPreferredSize(new Dimension(370, 112));
+
+        Font displayFont = resolveDisplayFont();
 
         miniDisplay = new JLabel("RPC READY");
         miniDisplay.setForeground(LCD_DARK);
-        miniDisplay.setFont(new Font("Monospaced", Font.ITALIC, 13));
+        miniDisplay.setFont(displayFont.deriveFont(Font.ITALIC, 17f));
+        miniDisplay.setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 0));
 
         display = new JLabel("0");
         display.setHorizontalAlignment(SwingConstants.RIGHT);
         display.setForeground(new Color(28, 39, 31));
-        display.setFont(resolveDisplayFont());
+        display.setFont(displayFont.deriveFont(Font.ITALIC, 40f));
+        display.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
 
         displayPanel.add(miniDisplay, BorderLayout.NORTH);
         displayPanel.add(display, BorderLayout.CENTER);
@@ -189,7 +193,7 @@ public class CalculatorGUI extends JFrame {
     private Font resolveDisplayFont() {
         Font bundledFont = loadBundledDisplayFont();
         if (bundledFont != null) {
-            return bundledFont.deriveFont(Font.ITALIC, 42f);
+            return bundledFont.deriveFont(Font.ITALIC, 40f);
         }
 
         String[] preferredFamilies = {
@@ -204,11 +208,11 @@ public class CalculatorGUI extends JFrame {
 
         for (String family : preferredFamilies) {
             if (isFontAvailable(family)) {
-                return new Font(family, Font.ITALIC, 42);
+                return new Font(family, Font.ITALIC, 40);
             }
         }
 
-        return new Font("Monospaced", Font.ITALIC, 42);
+        return new Font("Monospaced", Font.ITALIC, 40);
     }
 
     private Font loadBundledDisplayFont() {
