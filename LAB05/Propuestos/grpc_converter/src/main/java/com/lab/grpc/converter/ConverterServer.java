@@ -1,287 +1,172 @@
 package com.lab.grpc.converter;
 
-import java.io.IOException; 
-import java.util.logging.Logger; // logger para imprimir mensajes de estado en el servidor
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
 
-
-import io.grpc.Server; // clases de gRPC para crear el servidor y manejar las conexiones
-import io.grpc.ServerBuilder; // configura y construye el servidor gRPC
-import io.grpc.stub.StreamObserver; // i para enviar respuestas asÃ­ncronas a los clientes desde el servidor
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ConverterServer {
 
     private static final Logger logger = Logger.getLogger(ConverterServer.class.getName());
-
-    private static final int PORT = 50051; // puerto en q escucharÃ¡ el servidor
-
-    private static final double TASA_SOL_USD = 0.27; // tasa como valor constante
+    private static final int PORT = 50051;
 
     private Server server;
 
     public void start() throws IOException {
-
-        server = ServerBuilder    // construye 
-                .forPort(PORT) // forPort lo q hace es configurar el puerto
-                .addService(new ConverterServiceImpl()) // addService agrega ConverterServiceImpl que maneja solicitudes
-                .build() // construye con esa configuracion
+        server = ServerBuilder
+                .forPort(PORT)
+                .addService(new ConverterServiceImpl())
+                .build()
                 .start();
 
         logger.info("Servidor gRPC iniciado en puerto " + PORT);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> { // cuando se recibe una seÃ±al como ctrlc
-            logger.info("Apagando servidor...");
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Apagando servidor gRPC");
             ConverterServer.this.stop();
         }));
     }
 
-    public void stop() { // stop para apagar
+    private void stop() {
         if (server != null) {
             server.shutdown();
         }
     }
 
-    public void blockUntilShutdown() throws InterruptedException { // mantenerlo ejecutandose
+    private void blockUntilShutdown() throws InterruptedException {
         if (server != null) {
             server.awaitTermination();
         }
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-
-        ConverterServer server = new ConverterServer();
-
-        server.start();
-
-        server.blockUntilShutdown();
-    }
-
-    static class ConverterServiceImpl extends ConverterGrpc.ConverterImplBase { // extiende la clase generada por protoc para implementar el servicio definido en el .proto
+    static class ConverterServiceImpl extends ConverterGrpc.ConverterImplBase {
 
         @Override
-        public void convert(ConvertRequest req, StreamObserver<ConvertResponse> obs) { // maneja solicitudes de conversion
-            // streamobserver se usa para enviar la respuesta de forma asÃ­ncrona al cliente, el servidor puede procesar otras solicitudes mientras espera enviar la respuesta a este cliente
-            String tipo = req.getType().trim().toLowerCase();
+        public void convert(ConvertRequest request, StreamObserver<ConvertResponse> responseObserver) {
+            ConvertResponse response;
 
-            double valor = req.getValue();
+            try {
+                String category = normalize(request.getCategory());
+                String fromUnit = normalize(request.getFromUnit());
+                String toUnit = normalize(request.getToUnit());
+                double value = request.getValue();
 
-            logger.info("[PETICION] tipo=" + tipo + " valor=" + valor); // log de la solicitud
-
-            ConvertResponse resp; // almacena respuesta
-
-            if (Double.isNaN(valor) || Double.isInfinite(valor)) { 
-
-                resp = error("NÃºmero invÃ¡lido.");
-
-                obs.onNext(resp); // envia la respuesta de error al cliente
-                obs.onCompleted(); // completa y termina la comunicacion
-                return;
+                if (category.isBlank() || fromUnit.isBlank() || toUnit.isBlank()) {
+                    response = convertLegacy(request.getType(), value);
+                } else {
+                    response = convertByCategory(category, fromUnit, toUnit, value);
+                }
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, "Error al convertir", ex);
+                response = error(ex.getMessage());
             }
 
-            switch (tipo) {
-
-                // TEMPERATURA
-
-                case "celsius_fahrenheit":
-                    resp = ok(valor * 1.8 + 32,
-                            String.format("%.2f Â°C = %.2f Â°F", valor, valor * 1.8 + 32));
-                    break;
-
-                case "fahrenheit_celsius":
-                    resp = ok((valor - 32) / 1.8,
-                            String.format("%.2f Â°F = %.2f Â°C", valor, (valor - 32) / 1.8));
-                    break;
-
-                case "celsius_kelvin":
-
-                    if (valor < -273.15) { // kelvin no puede ser negativo
-                        resp = error("No existe temperatura menor a -273.15 Â°C");
-                        break;
-                    }
-
-                    resp = ok(valor + 273.15,
-                            String.format("%.2f Â°C = %.2f K", valor, valor + 273.15));
-                    break;
-
-                case "kelvin_celsius":
-
-                    if (valor < 0) { // kelvin no puede ser negativo
-                        resp = error("No existe Kelvin negativo");
-                        break;
-                    }
-
-                    resp = ok(valor - 273.15,
-                            String.format("%.2f K = %.2f Â°C", valor, valor - 273.15));
-                    break;
-
-                case "fahrenheit_kelvin":
-
-                    if (valor < -459.67) { // temperatura mÃ¡s baja posible en Fahrenheit
-                        resp = error("No existe temperatura menor a -459.67 Â°F");
-                        break;
-                    }
-
-                    double fk = (valor - 32) / 1.8 + 273.15;
-
-                    resp = ok(fk,
-                            String.format("%.2f Â°F = %.2f K", valor, fk));
-                    break;
-
-                case "kelvin_fahrenheit":
-
-                    if (valor < 0) { // kelvin no puede ser negativo
-                        resp = error("No existe Kelvin negativo");
-                        break;
-                    }
-
-                    double kf = (valor - 273.15) * 1.8 + 32;
-
-                    resp = ok(kf,
-                            String.format("%.2f K = %.2f Â°F", valor, kf));
-                    break;
-
-                // MONEDA
-
-                case "soles_dolares":
-
-                    if (valor < 0) {
-                        resp = error("Monto negativo no permitido");
-                        break;
-                    }
-
-                    resp = ok(valor * TASA_SOL_USD,
-                            String.format("S/ %.2f = $ %.2f", valor, valor * TASA_SOL_USD));
-                    break;
-
-                case "dolares_soles":
-
-                    if (valor < 0) {
-                        resp = error("Monto negativo no permitido");
-                        break;
-                    }
-
-                    resp = ok(valor / TASA_SOL_USD,
-                            String.format("$ %.2f = S/ %.2f", valor, valor / TASA_SOL_USD));
-                    break;
-
-                // DISTANCIA
-
-                case "km_millas":
-
-                    if (valor < 0) {
-                        resp = error("Distancia negativa no permitida");
-                        break;
-                    }
-
-                    resp = ok(valor * 0.621371,
-                            String.format("%.2f km = %.2f millas", valor, valor * 0.621371));
-                    break;
-
-                case "millas_km":
-
-                    if (valor < 0) {
-                        resp = error("Distancia negativa no permitida");
-                        break;
-                    }
-
-                    resp = ok(valor / 0.621371,
-                            String.format("%.2f millas = %.2f km", valor, valor / 0.621371));
-                    break;
-
-                // PESO
-
-                case "kg_g":
-
-                    if (valor < 0) {
-                        resp = error("Peso negativo no permitido");
-                        break;
-                    }
-
-                    resp = ok(valor * 1000,
-                            String.format("%.2f kg = %.2f g", valor, valor * 1000));
-                    break;
-
-                case "g_kg":
-
-                    if (valor < 0) {
-                        resp = error("Peso negativo no permitido");
-                        break;
-                    }
-
-                    resp = ok(valor / 1000,
-                            String.format("%.2f g = %.2f kg", valor, valor / 1000));
-                    break;
-
-                case "kg_lb":
-
-                    if (valor < 0) {
-                        resp = error("Peso negativo no permitido");
-                        break;
-                    }
-
-                    resp = ok(valor * 2.20462,
-                            String.format("%.2f kg = %.2f lb", valor, valor * 2.20462));
-                    break;
-
-                case "lb_kg":
-
-                    if (valor < 0) {
-                        resp = error("Peso negativo no permitido");
-                        break;
-                    }
-
-                    resp = ok(valor / 2.20462,
-                            String.format("%.2f lb = %.2f kg", valor, valor / 2.20462));
-                    break;
-
-                case "mg_g":
-
-                    if (valor < 0) {
-                        resp = error("Peso negativo no permitido");
-                        break;
-                    }
-
-                    resp = ok(valor / 1000,
-                            String.format("%.2f mg = %.2f g", valor, valor / 1000));
-                    break;
-
-                case "g_mg":
-
-                    if (valor < 0) {
-                        resp = error("Peso negativo no permitido");
-                        break;
-                    }
-
-                    resp = ok(valor * 1000,
-                            String.format("%.2f g = %.2f mg", valor, valor * 1000));
-                    break;
-
-                default:
-                    resp = error("Tipo de conversiÃ³n desconocido");
-            }
-
-            logger.info("[RESPUESTA] " +
-                    (resp.getSuccess() ? resp.getDescription() : resp.getErrorMessage()));
-
-            obs.onNext(resp);
-
-            obs.onCompleted();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         }
 
-        private ConvertResponse ok(double resultado, String descripcion) { // respuesta success con el resultado y la descripciÃ³n 
+        @Override
+        public void getCatalog(CatalogRequest request, StreamObserver<CatalogResponse> responseObserver) {
+            CatalogResponse.Builder catalogBuilder = CatalogResponse.newBuilder();
+
+            for (UnitCategory category : UnitCatalog.getCategories()) {
+                CategoryInfo.Builder categoryBuilder = CategoryInfo.newBuilder()
+                        .setCode(category.getCode())
+                        .setLabel(category.getLabel())
+                        .setDefaultFromUnit(category.getDefaultFromUnit())
+                        .setDefaultToUnit(category.getDefaultToUnit());
+
+                for (UnitDefinition unit : category.getUnits()) {
+                    categoryBuilder.addUnits(UnitInfo.newBuilder()
+                            .setCode(unit.getCode())
+                            .setLabel(unit.getLabel())
+                            .build());
+                }
+
+                catalogBuilder.addCategories(categoryBuilder.build());
+            }
+
+            responseObserver.onNext(catalogBuilder.build());
+            responseObserver.onCompleted();
+        }
+
+        private ConvertResponse convertByCategory(String category, String fromUnit, String toUnit, double value) {
+            logger.info("[PETICION] categoria=" + category + " valor=" + value + " de=" + fromUnit + " a=" + toUnit);
+
+            double result = UnitCatalog.convert(category, fromUnit, toUnit, value);
+            String description = UnitCatalog.describe(category, fromUnit, toUnit, value, result);
+
+            logger.info("[RESPUESTA] " + description);
 
             return ConvertResponse.newBuilder()
-                    .setResult(resultado)
-                    .setDescription(descripcion)
                     .setSuccess(true)
+                    .setResult(result)
+                    .setDescription(description)
+                    .setCategory(category)
+                    .setFromUnit(fromUnit)
+                    .setToUnit(toUnit)
                     .build();
         }
 
-        private ConvertResponse error(String mensaje) { // respuesta de error sin resultado ni descripcion
+        private ConvertResponse convertLegacy(String type, double value) {
+            String legacyType = normalize(type);
 
+            switch (legacyType) {
+                case "celsius_fahrenheit":
+                    return convertByCategory("temperatura", "C", "F", value);
+                case "fahrenheit_celsius":
+                    return convertByCategory("temperatura", "F", "C", value);
+                case "celsius_kelvin":
+                    return convertByCategory("temperatura", "C", "K", value);
+                case "kelvin_celsius":
+                    return convertByCategory("temperatura", "K", "C", value);
+                case "fahrenheit_kelvin":
+                    return convertByCategory("temperatura", "F", "K", value);
+                case "kelvin_fahrenheit":
+                    return convertByCategory("temperatura", "K", "F", value);
+                case "soles_dolares":
+                    return convertByCategory("moneda", "PEN", "USD", value);
+                case "dolares_soles":
+                    return convertByCategory("moneda", "USD", "PEN", value);
+                case "km_millas":
+                    return convertByCategory("longitud", "km", "mi", value);
+                case "millas_km":
+                    return convertByCategory("longitud", "mi", "km", value);
+                case "kg_g":
+                    return convertByCategory("masa", "kg", "g", value);
+                case "g_kg":
+                    return convertByCategory("masa", "g", "kg", value);
+                case "kg_lb":
+                    return convertByCategory("masa", "kg", "lb", value);
+                case "lb_kg":
+                    return convertByCategory("masa", "lb", "kg", value);
+                case "mg_g":
+                    return convertByCategory("masa", "mg", "g", value);
+                case "g_mg":
+                    return convertByCategory("masa", "g", "mg", value);
+                default:
+                    throw new IllegalArgumentException("Tipo de conversion no reconocido: " + legacyType);
+            }
+        }
+
+        private ConvertResponse error(String message) {
             return ConvertResponse.newBuilder()
                     .setSuccess(false)
-                    .setErrorMessage(mensaje)
+                    .setErrorMessage(message == null ? "Error desconocido" : message)
                     .build();
         }
+
+        private String normalize(String value) {
+            return value == null ? "" : value.trim();
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        ConverterServer server = new ConverterServer();
+        server.start();
+        server.blockUntilShutdown();
     }
 }
