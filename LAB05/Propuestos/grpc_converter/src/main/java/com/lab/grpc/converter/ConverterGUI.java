@@ -92,6 +92,8 @@ public class ConverterGUI extends JFrame {
         statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 0));
         statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         page.add(statusLabel);
+        page.add(Box.createVerticalStrut(10));
+        page.add(createFooter());
 
         add(page);
     }
@@ -444,6 +446,27 @@ public class ConverterGUI extends JFrame {
             statusLabel.setText("Sin conexion con el servidor");
             statusLabel.setForeground(Color.RED);
         }
+    }
+
+
+    private JPanel createFooter() {
+        JPanel footer = new JPanel(new BorderLayout());
+        footer.setBackground(new Color(230, 233, 239));
+        footer.setBorder(BorderFactory.createEmptyBorder(14, 18, 14, 18));
+        footer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 78));
+        footer.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel left = new JLabel("Conversor de unidades distribuido con gRPC");
+        left.setFont(new Font("Verdana", Font.PLAIN, 11));
+        left.setForeground(new Color(90, 90, 90));
+
+        JLabel right = new JLabel("Laboratorio 05 · Sistemas Distribuidos · UNSA", SwingConstants.RIGHT);
+        right.setFont(new Font("Verdana", Font.PLAIN, 11));
+        right.setForeground(new Color(120, 120, 120));
+
+        footer.add(left, BorderLayout.WEST);
+        footer.add(right, BorderLayout.EAST);
+        return footer;
     }
 
     @Override
