@@ -1,11 +1,14 @@
 package com.lab.rpc.calculator;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -23,6 +26,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
 import java.rmi.Naming;
 import java.text.DecimalFormat;
 
@@ -87,8 +91,48 @@ public class CalculatorGUI extends JFrame {
         root.add(createKeyboard(), BorderLayout.CENTER);
 
         setContentPane(root);
+        configureKeyboardShortcuts();
     }
 
+    private void configureKeyboardShortcuts() {
+        bindKey("NUM_0", "0", () -> appendDigit("0"));
+        bindKey("NUM_1", "1", () -> appendDigit("1"));
+        bindKey("NUM_2", "2", () -> appendDigit("2"));
+        bindKey("NUM_3", "3", () -> appendDigit("3"));
+        bindKey("NUM_4", "4", () -> appendDigit("4"));
+        bindKey("NUM_5", "5", () -> appendDigit("5"));
+        bindKey("NUM_6", "6", () -> appendDigit("6"));
+        bindKey("NUM_7", "7", () -> appendDigit("7"));
+        bindKey("NUM_8", "8", () -> appendDigit("8"));
+        bindKey("NUM_9", "9", () -> appendDigit("9"));
+
+        bindKey("DECIMAL_DOT", ".", this::appendDecimal);
+        bindKey("ADD", "PLUS", () -> setOperation("add"));
+        bindKey("ADD_NUMPAD", "ADD", () -> setOperation("add"));
+        bindKey("SUBTRACT", "MINUS", () -> setOperation("subtract"));
+        bindKey("SUBTRACT_NUMPAD", "SUBTRACT", () -> setOperation("subtract"));
+        bindKey("MULTIPLY", "MULTIPLY", () -> setOperation("multiply"));
+        bindKey("MULTIPLY_ALT", "shift 8", () -> setOperation("multiply"));
+        bindKey("DIVIDE", "SLASH", () -> setOperation("divide"));
+        bindKey("DIVIDE_NUMPAD", "DIVIDE", () -> setOperation("divide"));
+        bindKey("POWER", "shift 6", () -> setOperation("pow"));
+
+        bindKey("ENTER_EQUALS", "ENTER", this::calculateResult);
+        bindKey("BACKSPACE_DELETE", "BACK_SPACE", this::deleteLast);
+        bindKey("ESCAPE_CLEAR", "ESCAPE", this::clearAll);
+    }
+
+    private void bindKey(String name, String keyStroke, Runnable action) {
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(keyStroke), name);
+
+        getRootPane().getActionMap().put(name, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                action.run();
+            }
+        });
+    }
     private JPanel createHeader() {
         JPanel header = new JPanel(new BorderLayout(8, 10));
         header.setOpaque(false);
