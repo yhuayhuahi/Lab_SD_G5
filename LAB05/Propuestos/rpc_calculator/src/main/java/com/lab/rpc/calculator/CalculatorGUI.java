@@ -26,6 +26,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.io.InputStream;
 import java.awt.event.ActionEvent;
 import java.rmi.Naming;
 import java.text.DecimalFormat;
@@ -186,17 +187,43 @@ public class CalculatorGUI extends JFrame {
     }
 
     private Font resolveDisplayFont() {
-        String[] preferredFamilies = {"Calculator", "Digital-7", "DS-Digital", "Monospaced"};
+        Font bundledFont = loadBundledDisplayFont();
+        if (bundledFont != null) {
+            return bundledFont.deriveFont(Font.ITALIC, 42f);
+        }
+
+        String[] preferredFamilies = {
+                "Calculator",
+                "Casio",
+                "Digital-7",
+                "DS-Digital",
+                "Segment7",
+                "LCD",
+                "Monospaced"
+        };
 
         for (String family : preferredFamilies) {
             if (isFontAvailable(family)) {
-                return new Font(family, Font.ITALIC, 38);
+                return new Font(family, Font.ITALIC, 42);
             }
         }
 
-        return new Font("Monospaced", Font.ITALIC, 38);
+        return new Font("Monospaced", Font.ITALIC, 42);
     }
 
+    private Font loadBundledDisplayFont() {
+        try (InputStream stream = getClass().getResourceAsStream("/fonts/calculator-display.ttf")) {
+            if (stream == null) {
+                return null;
+            }
+
+            Font font = Font.createFont(Font.TRUETYPE_FONT, stream);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font);
+            return font;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
     private boolean isFontAvailable(String target) {
         String[] families = GraphicsEnvironment
                 .getLocalGraphicsEnvironment()
