@@ -183,6 +183,37 @@ public final class UnitCatalog {
                 new UnitDefinition("EUR", "Euro (EUR)", 4.00)
         )));
 
+
+        categories.add(new UnitCategory("tiempo", "Tiempo", "s", "min", List.of(
+                new UnitDefinition("ms", "Milisegundo (ms)", 0.001),
+                new UnitDefinition("s", "Segundo (s)", 1.0),
+                new UnitDefinition("min", "Minuto (min)", 60.0),
+                new UnitDefinition("h", "Hora (h)", 3600.0),
+                new UnitDefinition("dia", "Dia", 86400.0)
+        )));
+
+        categories.add(new UnitCategory("velocidad", "Velocidad", "m_s", "km_h", List.of(
+                new UnitDefinition("m_s", "Metro por segundo (m/s)", 1.0),
+                new UnitDefinition("km_h", "Kilometro por hora (km/h)", 0.2777777778),
+                new UnitDefinition("mph", "Milla por hora (mph)", 0.44704),
+                new UnitDefinition("ft_s", "Pie por segundo (ft/s)", 0.3048),
+                new UnitDefinition("kn", "Nudo (kn)", 0.514444)
+        )));
+
+        categories.add(new UnitCategory("densidad", "Densidad", "kg_m3", "g_cm3", List.of(
+                new UnitDefinition("kg_m3", "Kilogramo por metro cubico (kg/m3)", 1.0),
+                new UnitDefinition("g_l", "Gramo por litro (g/l)", 1.0),
+                new UnitDefinition("g_cm3", "Gramo por centimetro cubico (g/cm3)", 1000.0),
+                new UnitDefinition("lb_ft3", "Libra por pie cubico (lb/ft3)", 16.0185)
+        )));
+
+        categories.add(new UnitCategory("caudal", "Caudal", "m3_s", "l_s", List.of(
+                new UnitDefinition("m3_s", "Metro cubico por segundo (m3/s)", 1.0),
+                new UnitDefinition("m3_h", "Metro cubico por hora (m3/h)", 0.0002777778),
+                new UnitDefinition("l_s", "Litro por segundo (l/s)", 0.001),
+                new UnitDefinition("l_min", "Litro por minuto (l/min)", 0.0000166667),
+                new UnitDefinition("gpm_us", "Galon por minuto US (gpm)", 0.0000630902)
+        )));
         return List.copyOf(categories);
     }
 }
