@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public final class UnitCatalog {
 
-    private static final List<UnitCategory> CATEGORIES = buildCategories();
+    private static final List<UnitCategory> CATEGORIES = createCategories();
 
     private UnitCatalog() {
     }
@@ -27,193 +27,149 @@ public final class UnitCatalog {
 
     public static double convert(String categoryCode, String fromUnitCode, String toUnitCode, double value) {
         UnitCategory category = findCategory(categoryCode)
-                .orElseThrow(() -> new IllegalArgumentException("Categoria no encontrada: " + categoryCode));
+                .orElseThrow(() -> new IllegalArgumentException("Categoria no reconocida: " + categoryCode));
 
-        UnitDefinition from = category.findUnit(fromUnitCode)
-                .orElseThrow(() -> new IllegalArgumentException("Unidad origen no encontrada: " + fromUnitCode));
+        UnitDefinition fromUnit = category.findUnit(fromUnitCode)
+                .orElseThrow(() -> new IllegalArgumentException("Unidad origen no reconocida: " + fromUnitCode));
 
-        UnitDefinition to = category.findUnit(toUnitCode)
-                .orElseThrow(() -> new IllegalArgumentException("Unidad destino no encontrada: " + toUnitCode));
+        UnitDefinition toUnit = category.findUnit(toUnitCode)
+                .orElseThrow(() -> new IllegalArgumentException("Unidad destino no reconocida: " + toUnitCode));
 
-        ConversionValidator.validateGeneralValue(category.getCode(), from.getCode(), value);
+        ConversionValidator.validateGeneralValue(category.getCode(), fromUnit.getCode(), value);
 
         if ("temperatura".equalsIgnoreCase(category.getCode())) {
-            return convertTemperature(from.getCode(), to.getCode(), value);
+            return convertTemperature(fromUnit.getCode(), toUnit.getCode(), value);
         }
 
-        return value * from.getFactorToBase() / to.getFactorToBase();
+        return value * fromUnit.getFactorToBase() / toUnit.getFactorToBase();
     }
 
-    public static String describe(String categoryCode, String fromUnitCode, String toUnitCode, double value, double result) {
-        UnitCategory category = findCategory(categoryCode)
-                .orElseThrow(() -> new IllegalArgumentException("Categoria no encontrada: " + categoryCode));
-
-        UnitDefinition from = category.findUnit(fromUnitCode)
-                .orElseThrow(() -> new IllegalArgumentException("Unidad origen no encontrada: " + fromUnitCode));
-
-        UnitDefinition to = category.findUnit(toUnitCode)
-                .orElseThrow(() -> new IllegalArgumentException("Unidad destino no encontrada: " + toUnitCode));
-
-        return String.format("%.6f %s = %.6f %s", value, from.getCode(), result, to.getCode());
-    }
-
-    private static double convertTemperature(String from, String to, double value) {
-        double celsius;
-
-        switch (from.toUpperCase()) {
-            case "C":
-                celsius = value;
-                break;
-            case "F":
-                celsius = (value - 32.0) * 5.0 / 9.0;
-                break;
-            case "K":
-                celsius = value - 273.15;
-                break;
-            case "R":
-                celsius = (value - 491.67) * 5.0 / 9.0;
-                break;
-            default:
-                throw new IllegalArgumentException("Unidad de temperatura no valida: " + from);
-        }
-
-        switch (to.toUpperCase()) {
-            case "C":
-                return celsius;
-            case "F":
-                return celsius * 9.0 / 5.0 + 32.0;
-            case "K":
-                return celsius + 273.15;
-            case "R":
-                return (celsius + 273.15) * 9.0 / 5.0;
-            default:
-                throw new IllegalArgumentException("Unidad de temperatura no valida: " + to);
-        }
-    }
-
-    private static List<UnitCategory> buildCategories() {
+    private static List<UnitCategory> createCategories() {
         List<UnitCategory> categories = new ArrayList<>();
 
         categories.add(new UnitCategory("longitud", "Longitud", "m", "km", List.of(
-                new UnitDefinition("mm", "Milimetro (mm)", 0.001),
-                new UnitDefinition("cm", "Centimetro (cm)", 0.01),
-                new UnitDefinition("m", "Metro (m)", 1.0),
-                new UnitDefinition("km", "Kilometro (km)", 1000.0),
-                new UnitDefinition("in", "Pulgada (in)", 0.0254),
-                new UnitDefinition("ft", "Pie (ft)", 0.3048),
-                new UnitDefinition("yd", "Yarda (yd)", 0.9144),
-                new UnitDefinition("mi", "Milla (mi)", 1609.344),
-                new UnitDefinition("nmi", "Milla nautica (nmi)", 1852.0)
+                new UnitDefinition("mm", "Milimetro", 0.001),
+                new UnitDefinition("cm", "Centimetro", 0.01),
+                new UnitDefinition("m", "Metro", 1.0),
+                new UnitDefinition("km", "Kilometro", 1000.0),
+                new UnitDefinition("in", "Pulgada", 0.0254),
+                new UnitDefinition("ft", "Pie", 0.3048),
+                new UnitDefinition("yd", "Yarda", 0.9144),
+                new UnitDefinition("mi", "Milla", 1609.344)
         )));
 
         categories.add(new UnitCategory("masa", "Masa", "kg", "g", List.of(
-                new UnitDefinition("mg", "Miligramo (mg)", 0.000001),
-                new UnitDefinition("g", "Gramo (g)", 0.001),
-                new UnitDefinition("kg", "Kilogramo (kg)", 1.0),
-                new UnitDefinition("t", "Tonelada (t)", 1000.0),
-                new UnitDefinition("oz", "Onza (oz)", 0.0283495),
-                new UnitDefinition("lb", "Libra (lb)", 0.453592)
+                new UnitDefinition("mg", "Miligramo", 0.000001),
+                new UnitDefinition("g", "Gramo", 0.001),
+                new UnitDefinition("kg", "Kilogramo", 1.0),
+                new UnitDefinition("t", "Tonelada", 1000.0),
+                new UnitDefinition("lb", "Libra", 0.45359237),
+                new UnitDefinition("oz", "Onza", 0.028349523125)
         )));
 
-        categories.add(new UnitCategory("area", "Area", "m2", "ha", List.of(
-                new UnitDefinition("mm2", "Milimetro cuadrado (mm2)", 0.000001),
-                new UnitDefinition("cm2", "Centimetro cuadrado (cm2)", 0.0001),
-                new UnitDefinition("m2", "Metro cuadrado (m2)", 1.0),
-                new UnitDefinition("km2", "Kilometro cuadrado (km2)", 1000000.0),
-                new UnitDefinition("ha", "Hectarea (ha)", 10000.0),
-                new UnitDefinition("in2", "Pulgada cuadrada (in2)", 0.00064516),
-                new UnitDefinition("ft2", "Pie cuadrado (ft2)", 0.092903),
-                new UnitDefinition("yd2", "Yarda cuadrada (yd2)", 0.836127)
+        categories.add(new UnitCategory("area", "Area", "ha", "m2", List.of(
+                new UnitDefinition("m2", "Metro cuadrado", 1.0),
+                new UnitDefinition("km2", "Kilometro cuadrado", 1_000_000.0),
+                new UnitDefinition("ha", "Hectarea", 10_000.0),
+                new UnitDefinition("ac", "Acre", 4046.8564224)
         )));
 
-        categories.add(new UnitCategory("volumen", "Volumen", "m3", "l", List.of(
-                new UnitDefinition("ml", "Mililitro (ml)", 0.000001),
-                new UnitDefinition("l", "Litro (l)", 0.001),
-                new UnitDefinition("m3", "Metro cubico (m3)", 1.0),
-                new UnitDefinition("cm3", "Centimetro cubico (cm3)", 0.000001),
-                new UnitDefinition("ft3", "Pie cubico (ft3)", 0.0283168),
-                new UnitDefinition("in3", "Pulgada cubica (in3)", 0.0000163871),
-                new UnitDefinition("gal_us", "Galon US (gal)", 0.00378541)
-        )));
-
-        categories.add(new UnitCategory("energia", "Energia", "J", "kJ", List.of(
-                new UnitDefinition("J", "Joule (J)", 1.0),
-                new UnitDefinition("kJ", "Kilojoule (kJ)", 1000.0),
-                new UnitDefinition("cal", "Caloria (cal)", 4.1868),
-                new UnitDefinition("kcal", "Kilocaloria (kcal)", 4186.8),
-                new UnitDefinition("Wh", "Watt hora (Wh)", 3600.0),
-                new UnitDefinition("kWh", "Kilowatt hora (kWh)", 3600000.0),
-                new UnitDefinition("BTU", "BTU", 1055.06)
-        )));
-
-        categories.add(new UnitCategory("fuerza", "Fuerza", "N", "kgf", List.of(
-                new UnitDefinition("N", "Newton (N)", 1.0),
-                new UnitDefinition("dyn", "Dina (dyn)", 0.00001),
-                new UnitDefinition("kgf", "Kilogramo fuerza (kgf)", 9.80665),
-                new UnitDefinition("lbf", "Libra fuerza (lbf)", 4.44822)
-        )));
-
-        categories.add(new UnitCategory("potencia", "Potencia", "W", "kW", List.of(
-                new UnitDefinition("W", "Watt (W)", 1.0),
-                new UnitDefinition("kW", "Kilowatt (kW)", 1000.0),
-                new UnitDefinition("hp", "Horsepower (hp)", 745.7),
-                new UnitDefinition("CV", "Caballo de vapor (CV)", 735.5)
-        )));
-
-        categories.add(new UnitCategory("presion", "Presion", "Pa", "bar", List.of(
-                new UnitDefinition("Pa", "Pascal (Pa)", 1.0),
-                new UnitDefinition("kPa", "Kilopascal (kPa)", 1000.0),
-                new UnitDefinition("MPa", "Megapascal (MPa)", 1000000.0),
-                new UnitDefinition("bar", "Bar (bar)", 100000.0),
-                new UnitDefinition("atm", "Atmosfera (atm)", 101325.0),
-                new UnitDefinition("psi", "Libra por pulgada cuadrada (psi)", 6894.76),
-                new UnitDefinition("mmHg", "Milimetro de mercurio (mmHg)", 133.322)
+        categories.add(new UnitCategory("volumen", "Volumen", "l", "m3", List.of(
+                new UnitDefinition("ml", "Mililitro", 0.000001),
+                new UnitDefinition("l", "Litro", 0.001),
+                new UnitDefinition("m3", "Metro cubico", 1.0),
+                new UnitDefinition("gal_us", "Galon US", 0.003785411784)
         )));
 
         categories.add(new UnitCategory("temperatura", "Temperatura", "C", "F", List.of(
-                new UnitDefinition("C", "Celsius (C)", 1.0),
-                new UnitDefinition("F", "Fahrenheit (F)", 1.0),
-                new UnitDefinition("K", "Kelvin (K)", 1.0),
-                new UnitDefinition("R", "Rankine (R)", 1.0)
+                new UnitDefinition("C", "Grados Celsius", 1.0),
+                new UnitDefinition("F", "Grados Fahrenheit", 1.0),
+                new UnitDefinition("K", "Kelvin", 1.0),
+                new UnitDefinition("R", "Rankine", 1.0)
         )));
 
         categories.add(new UnitCategory("moneda", "Moneda", "PEN", "USD", List.of(
-                new UnitDefinition("PEN", "Sol peruano (PEN)", 1.0),
-                new UnitDefinition("USD", "Dolar estadounidense (USD)", 3.70),
-                new UnitDefinition("EUR", "Euro (EUR)", 4.00)
+                new UnitDefinition("PEN", "Soles", 1.0),
+                new UnitDefinition("USD", "Dolares", 3.70),
+                new UnitDefinition("EUR", "Euros", 4.00)
         )));
 
-
-        categories.add(new UnitCategory("tiempo", "Tiempo", "s", "min", List.of(
-                new UnitDefinition("ms", "Milisegundo (ms)", 0.001),
-                new UnitDefinition("s", "Segundo (s)", 1.0),
-                new UnitDefinition("min", "Minuto (min)", 60.0),
-                new UnitDefinition("h", "Hora (h)", 3600.0),
+        categories.add(new UnitCategory("tiempo", "Tiempo", "h", "min", List.of(
+                new UnitDefinition("ms", "Milisegundo", 0.001),
+                new UnitDefinition("s", "Segundo", 1.0),
+                new UnitDefinition("min", "Minuto", 60.0),
+                new UnitDefinition("h", "Hora", 3600.0),
                 new UnitDefinition("dia", "Dia", 86400.0)
         )));
 
-        categories.add(new UnitCategory("velocidad", "Velocidad", "m_s", "km_h", List.of(
-                new UnitDefinition("m_s", "Metro por segundo (m/s)", 1.0),
-                new UnitDefinition("km_h", "Kilometro por hora (km/h)", 0.2777777778),
-                new UnitDefinition("mph", "Milla por hora (mph)", 0.44704),
-                new UnitDefinition("ft_s", "Pie por segundo (ft/s)", 0.3048),
-                new UnitDefinition("kn", "Nudo (kn)", 0.514444)
+        categories.add(new UnitCategory("velocidad", "Velocidad", "km_h", "m_s", List.of(
+                new UnitDefinition("m_s", "Metro por segundo", 1.0),
+                new UnitDefinition("km_h", "Kilometro por hora", 0.2777777778),
+                new UnitDefinition("mph", "Milla por hora", 0.44704),
+                new UnitDefinition("kn", "Nudo", 0.514444)
         )));
 
-        categories.add(new UnitCategory("densidad", "Densidad", "kg_m3", "g_cm3", List.of(
-                new UnitDefinition("kg_m3", "Kilogramo por metro cubico (kg/m3)", 1.0),
-                new UnitDefinition("g_l", "Gramo por litro (g/l)", 1.0),
-                new UnitDefinition("g_cm3", "Gramo por centimetro cubico (g/cm3)", 1000.0),
-                new UnitDefinition("lb_ft3", "Libra por pie cubico (lb/ft3)", 16.0185)
+        categories.add(new UnitCategory("energia", "Energia", "kJ", "J", List.of(
+                new UnitDefinition("J", "Joule", 1.0),
+                new UnitDefinition("kJ", "Kilojoule", 1000.0),
+                new UnitDefinition("cal", "Caloria", 4.184),
+                new UnitDefinition("kcal", "Kilocaloria", 4184.0)
         )));
 
-        categories.add(new UnitCategory("caudal", "Caudal", "m3_s", "l_s", List.of(
-                new UnitDefinition("m3_s", "Metro cubico por segundo (m3/s)", 1.0),
-                new UnitDefinition("m3_h", "Metro cubico por hora (m3/h)", 0.0002777778),
-                new UnitDefinition("l_s", "Litro por segundo (l/s)", 0.001),
-                new UnitDefinition("l_min", "Litro por minuto (l/min)", 0.0000166667),
-                new UnitDefinition("gpm_us", "Galon por minuto US (gpm)", 0.0000630902)
+        categories.add(new UnitCategory("presion", "Presion", "bar", "Pa", List.of(
+                new UnitDefinition("Pa", "Pascal", 1.0),
+                new UnitDefinition("kPa", "Kilopascal", 1000.0),
+                new UnitDefinition("bar", "Bar", 100000.0),
+                new UnitDefinition("atm", "Atmosfera", 101325.0),
+                new UnitDefinition("psi", "PSI", 6894.757)
         )));
+
+        categories.add(new UnitCategory("fuerza", "Fuerza", "N", "kgf", List.of(
+                new UnitDefinition("N", "Newton", 1.0),
+                new UnitDefinition("kN", "Kilonewton", 1000.0),
+                new UnitDefinition("kgf", "Kilogramo fuerza", 9.80665),
+                new UnitDefinition("lbf", "Libra fuerza", 4.4482216153)
+        )));
+
+        categories.add(new UnitCategory("potencia", "Potencia", "kW", "W", List.of(
+                new UnitDefinition("W", "Watt", 1.0),
+                new UnitDefinition("kW", "Kilowatt", 1000.0),
+                new UnitDefinition("hp", "Horsepower", 745.699872)
+        )));
+
+        categories.add(new UnitCategory("densidad", "Densidad", "kg_m3", "g_l", List.of(
+                new UnitDefinition("kg_m3", "Kilogramo por metro cubico", 1.0),
+                new UnitDefinition("g_l", "Gramo por litro", 1.0),
+                new UnitDefinition("g_cm3", "Gramo por centimetro cubico", 1000.0),
+                new UnitDefinition("lb_ft3", "Libra por pie cubico", 16.018463)
+        )));
+
+        categories.add(new UnitCategory("caudal", "Caudal", "l_s", "m3_h", List.of(
+                new UnitDefinition("m3_s", "Metro cubico por segundo", 1.0),
+                new UnitDefinition("m3_h", "Metro cubico por hora", 1.0 / 3600.0),
+                new UnitDefinition("l_s", "Litro por segundo", 0.001),
+                new UnitDefinition("l_min", "Litro por minuto", 0.001 / 60.0),
+                new UnitDefinition("gpm_us", "Galon US por minuto", 0.003785411784 / 60.0)
+        )));
+
         return List.copyOf(categories);
+    }
+
+    private static double convertTemperature(String fromUnitCode, String toUnitCode, double value) {
+        double celsius = switch (fromUnitCode) {
+            case "C" -> value;
+            case "F" -> (value - 32.0) * 5.0 / 9.0;
+            case "K" -> value - 273.15;
+            case "R" -> (value - 491.67) * 5.0 / 9.0;
+            default -> throw new IllegalArgumentException("Unidad de temperatura no reconocida: " + fromUnitCode);
+        };
+
+        return switch (toUnitCode) {
+            case "C" -> celsius;
+            case "F" -> celsius * 9.0 / 5.0 + 32.0;
+            case "K" -> celsius + 273.15;
+            case "R" -> (celsius + 273.15) * 9.0 / 5.0;
+            default -> throw new IllegalArgumentException("Unidad de temperatura no reconocida: " + toUnitCode);
+        };
     }
 }
