@@ -10,6 +10,16 @@ public class CalculatorImpl extends UnicastRemoteObject implements Calculator {
     }
 
     @Override
+    public double add(double a, double b) throws RemoteException {
+        return validateResult(a + b, "suma");
+    }
+
+    @Override
+    public double subtract(double a, double b) throws RemoteException {
+        return validateResult(a - b, "resta");
+    }
+
+    @Override
     public double multiply(double a, double b) throws RemoteException {
         return validateResult(a * b, "multiplicacion");
     }
