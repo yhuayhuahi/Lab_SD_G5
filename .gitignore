@@ -28,3 +28,9 @@ pycache/
 postgres_data_arequipa/
 postgres_data_cusco/
 postgres_data_trujillo/
+# lab05 java maven gradle
+target/
+.gradle/
+bin/
+out/
+__pycache__/
