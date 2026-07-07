@@ -115,11 +115,12 @@ public class ConverterGUI extends JFrame {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(new Color(245, 247, 249));
         panel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 86));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 96));
 
         String[] labels = {
                 "Area", "Fuerza", "Temperatura", "Longitud", "Masa",
-                "Potencia", "Volumen", "Energia", "Presion", "Moneda"
+                "Potencia", "Volumen", "Energia", "Presion", "Moneda",
+                "Tiempo", "Velocidad", "Densidad", "Caudal"
         };
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -127,8 +128,8 @@ public class ConverterGUI extends JFrame {
         gbc.anchor = GridBagConstraints.WEST;
 
         for (int i = 0; i < labels.length; i++) {
-            gbc.gridx = i % 5;
-            gbc.gridy = i / 5;
+            gbc.gridx = i % 7;
+            gbc.gridy = i / 7;
 
             JLabel label = new JLabel(labels[i]);
             label.setForeground(BLUE);
