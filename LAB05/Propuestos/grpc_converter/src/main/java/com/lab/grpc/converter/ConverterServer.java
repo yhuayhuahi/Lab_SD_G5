@@ -1,4 +1,4 @@
-﻿package com.lab.grpc.converter;
+package com.lab.grpc.converter;
 
 import java.io.IOException; 
 import java.util.logging.Logger; // logger para imprimir mensajes de estado en el servidor
