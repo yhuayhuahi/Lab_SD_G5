@@ -1,19 +1,28 @@
 COMANDOS DE EJECUCION - CONVERSOR GRPC
 
+IMPORTANTE EN POWERSHELL:
+El parametro -Dexec.mainClass debe ir entre comillas para evitar errores de Maven.
+
+Ruta recomendada:
+cd C:\Users\usuario\Documents\Lab_SD_G5\LAB05\Propuestos\grpc_converter
+
 Compilar:
 mvn clean compile
 
 Ejecutar servidor:
-mvn exec:java -Dexec.mainClass="com.lab.grpc.converter.ConverterServer"
+mvn exec:java "-Dexec.mainClass=com.lab.grpc.converter.ConverterServer"
 
 Ejecutar cliente de consola:
-mvn exec:java -Dexec.mainClass="com.lab.grpc.converter.ConverterClient"
+mvn exec:java "-Dexec.mainClass=com.lab.grpc.converter.ConverterClient"
 
 Ejecutar demo automatica:
-mvn exec:java -Dexec.mainClass="com.lab.grpc.converter.ConverterDemo"
+mvn exec:java "-Dexec.mainClass=com.lab.grpc.converter.ConverterDemo"
 
 Ejecutar interfaz grafica:
-mvn exec:java -Dexec.mainClass="com.lab.grpc.converter.ConverterGUI"
+mvn exec:java "-Dexec.mainClass=com.lab.grpc.converter.ConverterGUI"
 
-Ruta recomendada:
-cd C:\Users\usuario\Documents\Lab_SD_G5\LAB05\Propuestos\grpc_converter
+Flujo de prueba:
+1. Abrir una terminal y ejecutar el servidor.
+2. Abrir otra terminal y ejecutar la GUI o el cliente.
+3. Realizar conversiones.
+4. Revisar logs del servidor.
